@@ -12,19 +12,24 @@
 
 ### 1) 싸이월드에 접속합니다. https://cy.cyworld.com/cyMain
  ![cyworld1](https://github.com/designe/cy2me/blob/master/assets/cy1.PNG?raw=true)
+ ```
  아마 많은 분들이 싸이월드 계정을 까먹었을거에요. (저는 심지어 세이클럽 이메일이었다는..) 얼른 아이디/비밀번호부터 찾아서 로그인을 합니다.
+ ```
 
 ### 2) 싸이월드에 홈피에 접속해봅시다.
 ![cyworld2](https://github.com/designe/cy2me/blob/master/assets/cy2.PNG?raw=true)
+ ```
  로그인되면 타임라인이라는 새로운 개념이 생겨있어요. 백업을 하려면 예전의 미니홈피를 접속해야하는데 오른쪽 상단에 파란 동그라미 쳐놓은 프로필 이미지를 선택하시면 들어가집니다.
+```
 
 ### 3) Chrome Devtool 실행
 ![cyworld3](https://github.com/designe/cy2me/blob/master/assets/cy3.PNG?raw=true)
+```
  홈피 접속된 상태에서 F12 또는 ctrl+shift+i 를 누르면 Chrome Devtool 이 실행됩니다. 
  (미니 홈피 아무곳이나 오른쪽 클릭 후 검사(N)를 누르면 동일하게 실행 가능)
  Chrome Devtool은 dock처럼 페이지 바로 옆에 실행이 되거나 독립된 창으로 실행되기도 합니다. (설정으로 바꿀 수 있음)
  여기까지 접속하셨다면 이제 거의 다 오셨습니다.
-
+```
  ### 4) Console 탭 선택
  아래의 스크립트를 복사한 후 Console에 붙여넣기하고 Enter를 칩니다.
  ```js
