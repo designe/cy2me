@@ -3,12 +3,14 @@
     var type = 'more';
     var search = '';
     var allPosts = [];
+    var allDiary = [];
+    var sizeOfAllPosts = 0;
     var postIdx = 0;
     var allPostCount = 0;
 
     if(type == 'more'){
         last_id 	 = $(".hiddenId:last").data("id");
-        last_dt 	 = '';//$(".hiddenDt:last").data("id");
+        last_dt 	 = '';
         airepageno   = $("#airepageno").val();
         airecase 	 = $("#airecase").val();
         airelastdate = $("#airelastdate").val();
@@ -44,20 +46,20 @@
         return ret;
     }
 
-    function readAllCyPosts() {
-        var reloadPosts = function(totalCount) {
+    function readAllCyPosts(t) {
+        var totalCount = readCyPost(30, t);
+        postIdx = totalCount;
+        if(totalCount > 30) postIdx = 30;
+        else return;
+
+        do {
+            readCyPost(totalCount - postIdx, t);
             postIdx += 30;
-            if(postIdx > totalCount) {
-                console.log(allPosts);
-                return;
-            } else {
-                readCyPost(totalCount - postIdx, reloadPosts);
-            }
-        }
-        readCyPost(30, reloadPosts);
+        } while (totalCount - postIdx > 0);
     }
 
-    function readCyPost(cnt, callback) {
+    function readCyPost(cnt, t) {
+        var ret = 0;
         $.ajax({
             url: '/home/'+ homeTid + "/posts",		    
             data:{
@@ -75,19 +77,22 @@
                 "searchType"   : srchType,
                 "search" : search
             },
-            cache: false,
+            cache: true,
             dataType: "json",
             async:false,
             success: function(data) {
-                //console.log('data ::: ' + JSON.stringify(data));
                 console.log(cnt);
                 last_dt = data.lastdate;
+                ret = data.totalCount;
                 var baseIdx = postIdx;
 
                 if(data.postList.length > 0) {
                     data.postList.some(function(value, index) {
-                        console.log(baseIdx + index);
+                        console.log(baseIdx + index + "번째 컨텐츠 수집중입니다.");
                         console.log(value);
+                        if(t && value.serviceType != t)
+                            return false;
+                        
                         var post = {
                             "type" : value.serviceType,
                             "writer" : value.writer,
@@ -101,7 +106,8 @@
                             case "1": /* Board */
                             case "M": break; /* Diary */
                             case "7": 
-                                allPosts[baseIdx + index] = post;
+                                if(t) allPosts[baseIdx + index] = post;
+                                else allPosts.push(post);
                                 return false;
                         }
 
@@ -134,21 +140,23 @@
                                                 temp.name = comments.commentList[comment_idx].writer.name;
                                                 post.comments.push(temp);
                                             }
-                                            allPosts[baseIdx + index] = post;
+                                            if(t) allPosts[baseIdx + index] = post;
+                                            else allPosts.push(post);
                                         }
                                     });
                                 } else {
-                                    allPosts[baseIdx + index] = post;
+                                    if(t) allPosts[baseIdx + index] = post;
+                                    else allPosts.push(post);
                                 }
                             }
                         });
                     });
                 }else {
-                    return false;
+                    ret = 0;
                 }
-                if(callback) callback(200);
             }
         });
+        return ret;
     }
 
 readAllCyPosts();
