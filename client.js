@@ -3,10 +3,8 @@
     var type = 'more';
     var search = '';
     var allPosts = [];
-    var allDiary = [];
-    var sizeOfAllPosts = 0;
     var postIdx = 0;
-    var allPostCount = 0;
+    var activateReply = false;
 
     if(type == 'more'){
         last_id 	 = $(".hiddenId:last").data("id");
@@ -41,14 +39,17 @@
             if(allPosts[i].type != "2")
                 continue;
             imageCount++;
-            ret += "http://nthumb.cyworld.com/thumb?v=0&width=810&url=" + allPosts[i].image + " "+ imageCount + "_" + allPosts[i].date.replace(/\./gi, "") + "_" + allPosts[i].time.replace(/\:/gi, "") + ".jpg" + " " + allPosts[i].date.replace(/\./gi, ":") + " " + allPosts[i].time + "\n";
+            ret += "http://nthumb.cyworld.com/thumb?v=0&width=810&url=" + allPosts[i].image + " " + imageCount + "_" + allPosts[i].date.replace(/\./gi, "") + "_" + allPosts[i].time.replace(/\:/gi, "") + "." + allPosts[i].image.split(".").pop() + " " + allPosts[i].date.replace(/\./gi, ":") + " " + allPosts[i].time + "\n";
         }
         return ret;
     }
 
     function readAllCyPosts(t) {
+        // initialize global variables
+        allPosts = [];
         var totalCount = readCyPost(30, t);
         postIdx = totalCount;
+
         if(totalCount > 30) postIdx = 30;
         else return;
 
@@ -77,7 +78,7 @@
                 "searchType"   : srchType,
                 "search" : search
             },
-            cache: true,
+            cache: false,
             dataType: "json",
             async:false,
             success: function(data) {
@@ -110,46 +111,56 @@
                                 else allPosts.push(post);
                                 return false;
                         }
+                        try {
+                            $.ajax({
+                                url: "/home/" + homeTid + "/post/"+ value.identity + "/layer",
+                                cache:false,
+                                dataType:'html',
+                                data:{},
+                                success:function(viewResult, status, xhr) {
+                                    var output = $("<output>").append($.parseHTML(viewResult));
+                                    if(typeof $(".textData", output)[0] === 'undefined'){
+                                        return false;
+                                    }
+        
+                                    if(post.type != "M")
+                                        post.title = $("#cyco-post-title", output)[0].innerText.trim();
+                                    post.content = $(".textData", output)[0].innerText.trim();
+                                    post.date = $(".view1", output)[0].innerText.trim().split(" ")[0].split('\t').pop();
+                                    post.time = $(".view1", output)[0].innerText.trim().split(" ")[1];
 
-                        $.ajax({
-                            url: "/home/" + homeTid + "/post/"+ value.identity + "/layer",
-                            dataType:'html',
-                            data:{},
-                            success:function(viewResult, status, xhr) {
-                                var output = $("<output>").append($.parseHTML(viewResult));
-                                if(typeof $(".textData", output)[0] === 'undefined'){
-                                    return false;
-                                }
-    
-                                if(post.type != "M")
-                                    post.title = $("#cyco-post-title", output)[0].innerText.trim();
-                                post.content = $(".textData", output)[0].innerText.trim();
-                                post.date = $(".view1", output)[0].innerText.trim().split(" ")[0].split('\t').pop();
-                                post.time = $(".view1", output)[0].innerText.trim().split(" ")[1];
-
-                                var commentCount = value.commentCount;
-                                if(commentCount != 0){
-                                    $.ajax({
-                                        url: "/home/" + homeTid + "/post/" + value.identity + "/comment",
-                                        dataType:'json',
-                                        data: {},
-                                        success: function(comments, status, xhr) {
-                                            post.comments = [];
-                                            for(comment_idx in comments.commentList) {
-                                                var temp = comments.commentList[comment_idx].contentModel[0];
-                                                temp.name = comments.commentList[comment_idx].writer.name;
-                                                post.comments.push(temp);
-                                            }
-                                            if(t) allPosts[baseIdx + index] = post;
-                                            else allPosts.push(post);
+                                    if(activateReply) {
+                                        var commentCount = value.commentCount;
+                                        if(commentCount != 0){
+                                            $.ajax({
+                                                url: "/home/" + homeTid + "/post/" + value.identity + "/comment",
+                                                dataType:'json',
+                                                data: {},
+                                                success: function(comments, status, xhr) {
+                                                    post.comments = [];
+                                                    for(comment_idx in comments.commentList) {
+                                                        var temp = comments.commentList[comment_idx].contentModel[0];
+                                                        temp.name = comments.commentList[comment_idx].writer.name;
+                                                        post.comments.push(temp);
+                                                    }
+                                                    if(t) allPosts.push(post); 
+                                                    else allPosts[baseIdx + index] = post;
+                                                }
+                                            });
+                                        } else {
+                                            if(t) allPosts.push(post); 
+                                            else allPosts[baseIdx + index] = post;
                                         }
-                                    });
-                                } else {
-                                    if(t) allPosts[baseIdx + index] = post;
-                                    else allPosts.push(post);
+                                    } else {
+                                        if(t) allPosts.push(post); 
+                                        else allPosts[baseIdx + index] = post;
+                                    }
                                 }
+                            });
                             }
-                        });
+                        catch(e) {
+                            console.error(e);
+                        }
                     });
                 }else {
                     ret = 0;
@@ -159,4 +170,4 @@
         return ret;
     }
 
-readAllCyPosts();
+    console.log("CY2ME : Cyworld 백업 준비 완료 :)");
