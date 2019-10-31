@@ -4,7 +4,7 @@
     var search = '';
     var allPosts = [];
     var postIdx = 0;
-    var activateReply = false;
+    var activateReply = true;
 
     if(type == 'more'){
         last_id 	 = $(".hiddenId:last").data("id");
@@ -44,9 +44,38 @@
         return ret;
     }
 
+    function saveAs(filename, file) {
+        var a = document.createElement("a"),
+        url = URL.createObjectURL(file);
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function() {
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);  
+        }, 0); 
+    }
+
+    function collectDiaries(comment=true) {
+        activateReply = comment;
+        readAllCyPosts("M");
+        var file = new Blob([JSON.stringify(allPosts, null, 1)], {type: "text/plain;charset=utf-8"});
+        saveAs("MyCyDiary_" + Date().replace(/\ /gi, "_").split("_GMT")[0] + ".txt", file);
+        console.log(allPosts);
+    }
+
+    function collectPhotos() {
+        activateReply = false;
+        readAllCyPosts("2");
+        var file = new Blob([printImageList()], {type: "text/plain;charset=utf-8"});
+        saveAs("MyCyPhotos_" + Date().replace(/\ /gi, "_").split("_GMT")[0] + ".txt", file);
+    }
+
     function readAllCyPosts(t) {
         // initialize global variables
         allPosts = [];
+        postIdx = 0;
         var totalCount = readCyPost(30, t);
         postIdx = totalCount;
 
@@ -57,6 +86,7 @@
             readCyPost(totalCount - postIdx, t);
             postIdx += 30;
         } while (totalCount - postIdx > 0);
+        console.log("Finish");
     }
 
     function readCyPost(cnt, t) {
@@ -82,15 +112,12 @@
             dataType: "json",
             async:false,
             success: function(data) {
-                console.log(cnt);
                 last_dt = data.lastdate;
                 ret = data.totalCount;
                 var baseIdx = postIdx;
 
                 if(data.postList.length > 0) {
                     data.postList.some(function(value, index) {
-                        console.log(baseIdx + index + "번째 컨텐츠 수집중입니다.");
-                        console.log(value);
                         if(t && value.serviceType != t)
                             return false;
                         
@@ -115,6 +142,7 @@
                             $.ajax({
                                 url: "/home/" + homeTid + "/post/"+ value.identity + "/layer",
                                 cache:false,
+                                async:false,
                                 dataType:'html',
                                 data:{},
                                 success:function(viewResult, status, xhr) {
@@ -135,6 +163,7 @@
                                             $.ajax({
                                                 url: "/home/" + homeTid + "/post/" + value.identity + "/comment",
                                                 dataType:'json',
+                                                async:false,
                                                 data: {},
                                                 success: function(comments, status, xhr) {
                                                     post.comments = [];
@@ -143,17 +172,14 @@
                                                         temp.name = comments.commentList[comment_idx].writer.name;
                                                         post.comments.push(temp);
                                                     }
-                                                    if(t) allPosts.push(post); 
-                                                    else allPosts[baseIdx + index] = post;
+                                                    allPosts.push(post); 
                                                 }
                                             });
                                         } else {
-                                            if(t) allPosts.push(post); 
-                                            else allPosts[baseIdx + index] = post;
+                                            allPosts.push(post); 
                                         }
                                     } else {
-                                        if(t) allPosts.push(post); 
-                                        else allPosts[baseIdx + index] = post;
+                                        allPosts.push(post); 
                                     }
                                 }
                             });
@@ -161,6 +187,8 @@
                         catch(e) {
                             console.error(e);
                         }
+                        var cal = ((baseIdx + index) / ret ) * 100;
+                        console.log("Collecting | " + value.identity + " | " + cal.toFixed(2) + "% [" + (baseIdx + index) + " / " + ret + "] " );
                     });
                 }else {
                     ret = 0;
