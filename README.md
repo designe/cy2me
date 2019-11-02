@@ -73,19 +73,21 @@ collectPhotos();
 수집이 완료되면 MyCyPhotos_현재시간.txt가 다운로드될꺼다.  
 이걸 복사해서 사용자 폴더(일반적으로 C:\Users\사용자이름 )에 저장해보자.  
 
-그리고 Powershell 이라는걸 실행해야 한다.  
+그리고 Powershell 이라는걸 실행해야 한다.
+![cyworld4](https://github.com/designe/cy2me/blob/master/assets/cy4.PNG?raw=true)
 Win + R 을 누르면 실행창이 뜨고, 여기다가 powershell을 누르면 실행된다.  
 모르겠으면 시작 누르고 찾다보면 나온다. 
 
+![cyworld5](https://github.com/designe/cy2me/blob/master/assets/cy5.PNG?raw=true)
 ```bash
 Get-Content .\MyCyPhotos_현재시간.txt | %{ wget $_.split(" ")[0] -OutFile $_.split(" ")[1];}
 ```
 
 위에 명령어 치면 막 다운로드 받아지는게 느껴진다.
 
-* 추가 팁 : 고급 Option
-exiftool을 쓰면 사진 찍은 날짜를 포스팅 올린 날짜로 일괄 변경해준다.
-https://www.sno.phy.queensu.ca/~phil/exiftool/
+**추가 팁 : 고급 Option**  
+exiftool을 쓰면 사진 찍은 날짜를 포스팅 올린 날짜로 일괄 변경해준다.  
+https://www.sno.phy.queensu.ca/~phil/exiftool/  
 Windows는 여기서 다운로드받아서 설치하고 powershell이나 cmd에서 사용하면 된다.  
 아래 명령어로 해당 이미지 폴더에서 실행하시면 끝!  
 
