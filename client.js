@@ -65,6 +65,22 @@
         console.log(allPosts);
     }
 
+    function collectBoards(comment=true) {
+        activateReply = comment;
+        readAllCyPosts("1");
+        var file = new Blob([JSON.stringify(allPosts, null, 1)], {type: "text/plain;charset=utf-8"});
+        saveAs("MyCyBoards_" + Date().replace(/\ /gi, "_").split("_GMT")[0] + ".txt", file);
+        console.log(allPosts);
+    }
+
+    function collectBlogs(comment=true) {
+        activateReply = comment;
+        readAllCyPosts("B");
+        var file = new Blob([JSON.stringify(allPosts, null, 1)], {type: "text/plain;charset=utf-8"});
+        saveAs("MyCyBlogs_" + Date().replace(/\ /gi, "_").split("_GMT")[0] + ".txt", file);
+        console.log(allPosts);
+    }
+    
     function collectPhotos() {
         activateReply = false;
         readAllCyPosts("2");
@@ -76,6 +92,7 @@
         // initialize global variables
         allPosts = [];
         postIdx = 0;
+        last_dt = null;
         var totalCount = readCyPost(30, t);
         postIdx = totalCount;
 
@@ -153,7 +170,11 @@
         
                                     if(post.type != "M")
                                         post.title = $("#cyco-post-title", output)[0].innerText.trim();
-                                    post.content = $(".textData", output)[0].innerText.trim();
+                                    var content = "";
+                                    var contentObj = $(".textData", output);
+                                    for(var i = 0; i < contentObj.length; i++)
+                                        content += contentObj[i].innerText.trim();
+                                    post.content = content;
                                     post.date = $(".view1", output)[0].innerText.trim().split(" ")[0].split('\t').pop();
                                     post.time = $(".view1", output)[0].innerText.trim().split(" ")[1];
 
