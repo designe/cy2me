@@ -47,7 +47,7 @@ var last_id,last_dt,tag_value,startdate,enddate,forder_id,airepageno,airecase,ai
 ```
 
 백업 준비 완료되었다는 메세지가 뜰 것이다.
-![cyworld8](https://github.com/designe/cy2me/blob/master/assets/cy8.PNG?raw=true)
+![cyworld8](https://github.com/designe/cy2me/blob/master/assets/cy8.png?raw=true)
 
 ## 5. 다이어리 수집 (게시판, 블로그에 쓴 글들)
 ```js

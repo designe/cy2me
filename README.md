@@ -48,7 +48,7 @@ var last_id,last_dt,tag_value,startdate,enddate,forder_id,airepageno,airecase,ai
 ```
 
 Console에 붙여넣고 Enter를 누르면 아래 메세지가 뜬다.
-![cyworld8](https://github.com/designe/cy2me/blob/master/assets/cy8.PNG?raw=true)
+![cyworld8](https://github.com/designe/cy2me/blob/master/assets/cy8.png?raw=true)
 
 
 ## 5) 다이어리 수집 (게시판, 블로그에 쓴 글들)
