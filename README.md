@@ -34,9 +34,9 @@
 
 
 ## 3) Chrome Devtool 실행
-![cyworld3](https://github.com/designe/cy2me/blob/master/assets/cy3.PNG?raw=true)
+![cyworld3](https://github.com/designe/cy2me/bloob/master/assets/cy3.PNG?raw=true)
 
- 홈피 접속된 상태에서 F12 또는 ctrl+shift+i 를 눌러보자.  
+ 홈피 접속된 상태에서 F12를 눌러보자.  
  Chrome Devtool 이라는게 실행된다. 이 툴은 dock처럼 페이지 바로 옆에 실행이 되거나 독립된 창으로 실행되는데 기본 세팅은 옆에 탭처럼 켜진다. (설정으로 바꿀 수 있음)  
  이제 거의 다 왔다.
 
