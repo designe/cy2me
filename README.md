@@ -68,6 +68,10 @@ false를 넣게 되면 댓글 제외한 상태에서 수집이 됨. */
 
 위 함수를 사용하면 게시판, 블로그, 클럽에 썼던 글들도 동일하게 백업이 가능하다.
 
+## 5-1) 백업 파일 뷰어로 확인
+https://dev.jbear.co/cy2me  
+위 링크에 접속해 다운로드 받은 파일을 선택하면 깔끔하게 정리되어 확인할 수 있다.  
+
 다음은 사진 저장 방법이다.  
 이건 조금 어려우니 집중해서 따라하길 바란다.
 
@@ -82,8 +86,8 @@ collectPhotos();
 수집이 완료되면 MyCyPhotos_현재시간.txt가 다운로드될꺼다.  
 이걸 복사해서 사용자 폴더(일반적으로 C:\Users\사용자이름 )에 저장해보자.  
 
-그리고 Powershell 이라는걸 실행해야 한다.
-![cyworld4](https://github.com/designe/cy2me/blob/master/assets/cy4.PNG?raw=true)
+그리고 Powershell 이라는걸 실행해야 한다.  
+![cyworld4](https://github.com/designe/cy2me/blob/master/assets/cy4.PNG?raw=true)  
 Win + R 을 누르면 실행창이 뜨고, 여기다가 powershell을 누르면 실행된다.  
 모르겠으면 시작 누르고 찾다보면 나온다. 
 
