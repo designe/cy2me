@@ -1,0 +1,149 @@
+<html>
+  <head>
+    <title> CY2ME </title>
+    <link href="https://fonts.googleapis.com/css?family=Noto+Sans+KR&display=swap" rel="stylesheet">
+    <style>
+      body {
+          font-family: 'Noto Sans KR', sans-serif;
+      }
+      #header { text-align:center; height:45px; line-height:45px; font-weight:bold; font-size:25px; }
+      #droparea {
+          width:90%;
+          height:80px;
+          line-height:80px;
+          background-color:#eee;
+          text-align:center;
+      }
+      .M { }
+      .M .title { display:none; }
+      .M .date { font-size:20px; color:#aaa; }
+      .B { }
+      .B .title { }
+      .post { padding:5%;  }
+      .post .title { font-size:20px; font-weight:bold; padding:5px; border-bottom:5px solid #777; clear:both;}
+      .post .date {padding:5px;}
+      .post .time {padding:5px;}
+      .post .content{padding:5px; border-top:1px solid #ddd; border-bottom:1px solid #ddd;  background-color:#efefef;}
+      .post .comment { clear:both; }
+      .post .comment .name { float:left; font-weight:bold; padding:5px;}
+      .post .comment .value { float:left; padding:5px; max-width:80%; text-align:left;}
+    </style>
+    <script src='assets/jquery-3.4.1.min.js'></script>
+    <script>
+
+      function showContent(_json) {
+          var viewer = $("#viewer");
+
+          for(var i = 0; i < _json.length; i++) {
+              console.log(_json[i]);
+              var post = $("<div class='post'>");
+              switch(_json[i].type){
+              case "M":
+                  post = $("<div class='post M'>");
+                  break;
+              case "B":
+                  post = $("<div class='post B'>");
+                  break;
+              default:
+                  break;
+              }
+
+              post.append($("<div class='title'>").text($('<textarea/>').html(_json[i].title).text()));
+              post.append($("<div class='date'>").text(_json[i].date + "\t\t" + _json[i].time));
+              post.append($("<div class='content'>").text(_json[i].content));
+              if(_json[i].comments !== undefined) {
+                  for(var j = 0; j < _json[i].comments.length; j++) {
+                      var comment = $("<div class='comment'>");
+                      comment.append($("<div class='name'>").text(_json[i].comments[j].name));
+                      comment.append($("<div class='value'>").text(_json[i].comments[j].value));
+                      post.append(comment);
+                  }
+              }
+              viewer.append(post);
+          }
+      }
+      $(document).ready(function() {
+          var dropZone = $("#droparea");
+          dropZone.on('dragenter', function(e) {
+              e.stopPropagation();
+              e.preventDefault();
+              dropZone.css('background-color', "#E3F2FC");
+          });
+
+          dropZone.on('dragleave', function(e) {
+              e.stopPropagation();
+              e.preventDefault();
+
+              dropZone.css('background-color', "#EEEEEE");
+          });
+
+          dropZone.on('dragover', function(e) {
+              e.stopPropagation();
+              e.preventDefault();
+
+              dropZone.css("background-color", "#E3F2FC");
+          });
+
+          dropZone.on('drop', function(e) {
+              e.preventDefault();
+
+              dropZone.css('background-color', '#EEEEEE');
+              var file = e.originalEvent.dataTransfer.files;
+              if(file != null) {
+                  if(file.length < 1) {
+                      alert('folder is not supported');
+                      return;
+                  }
+                  file = file[0];
+                  var reader = new FileReader();
+                  reader.onload = function(ee) {
+                      contents = ee.target.result;
+                      contents = JSON.parse(contents);
+                      $("#viewer").html("");
+                      showContent(contents);
+                  };
+
+                  reader.readAsText(file);
+              } else {
+                  alert('error');
+              }
+          });
+
+          var fileZone = $("#fileinput");
+          fileZone.on('change', function(e) {
+              file = this.files;
+              if(file != null) {
+                  if(file.length < 1) {
+                      alert('folder is not supported');
+                      return;
+                  }
+                  file = file[0];
+                  var reader = new FileReader();
+                  reader.onload = function(ee) {
+                      contents = ee.target.result;
+                      contents = JSON.parse(contents);
+                      $("#viewer").html("");
+                      showContent(contents);
+                  };
+
+                  reader.readAsText(file);
+              } else {
+                  alert('error');
+              }
+          });
+      });
+    </script>
+  </head>
+  <body>
+    <div id='header'>
+      CY2ME Viewer
+    </div>
+    <center>
+    <div id="droparea">
+      이 곳에 파일을 끌어놓으세요. | <input type="file" id="fileinput" />
+    </div>
+    <div id="viewer">
+    </div>
+    </center>
+  </body>
+</html>
