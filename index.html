@@ -7,6 +7,7 @@
           font-family: 'Noto Sans KR', sans-serif;
       }
       #header { text-align:center; height:45px; line-height:45px; font-weight:bold; font-size:25px; }
+      #site { text-align:center; line-height:30px; height:30px; padding:10px;} 
       #droparea {
           width:90%;
           height:80px;
@@ -20,13 +21,13 @@
       .B { }
       .B .title { }
       .post { padding:5%;  }
-      .post .title { font-size:20px; font-weight:bold; padding:5px; border-bottom:5px solid #777; clear:both;}
+      .post .title { font-size:20px; font-weight:bold; padding-bottom:5px; padding-right:5px; padding-left:5px;  border-bottom:5px solid #777; clear:both;}
       .post .date {padding:5px;}
       .post .time {padding:5px;}
       .post .content{padding:5px; border-top:1px solid #ddd; border-bottom:1px solid #ddd;  background-color:#efefef;}
       .post .comment { clear:both; }
       .post .comment .name { float:left; font-weight:bold; padding:5px;}
-      .post .comment .value { float:left; padding:5px; max-width:80%; text-align:left;}
+      .post .comment .value { float:left; padding:5px; max-width:90%; text-align:left;}
     </style>
     <script src='assets/jquery-3.4.1.min.js'></script>
     <script>
@@ -42,6 +43,7 @@
                   post = $("<div class='post M'>");
                   break;
               case "B":
+              case "1":
                   post = $("<div class='post B'>");
                   break;
               default:
@@ -137,6 +139,9 @@
   <body>
     <div id='header'>
       CY2ME Viewer
+    </div>
+    <div id='site'>
+      README  / <a href = 'https://github.com/designe/cy2me' target='_blank'> https://github.com/designe/cy2me </a>
     </div>
     <center>
     <div id="droparea">
