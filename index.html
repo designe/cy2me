@@ -124,9 +124,13 @@
                   var reader = new FileReader();
                   reader.onload = function(ee) {
                       contents = ee.target.result;
-                      contents = JSON.parse(contents);
-                      $("#viewer").html("");
-                      showContent(contents);
+                      try {
+                          contents = JSON.parse(contents);
+                          $("#viewer").html("");
+                          showContent(contents);
+                      } catch(exception) {
+                          alert("JSON이 아닙니다. 지원하지 않는 포맷입니다.");
+                      }
                   };
 
                   reader.readAsText(file);
