@@ -14,6 +14,10 @@
       #filebox label { display: inline-block; padding: .5em .75em; color: #555; font-size: 12px; line-height: normal; vertical-align: middle; background-color: #fdfdfd; cursor: pointer; border: 1px solid #ebebeb; border-bottom-color: #e2e2e2; border-radius: .25em; }
       #filebox input[type="file"] { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip:rect(0,0,0,0); border: 0; }
       #filebox .upload-name { padding: .5em .75em; width:200px; font-size: 12px; font-family: inherit; line-height: normal; vertical-align: middle; background-color: #f5f5f5; border: 1px solid #ebebeb; border-bottom-color: #e2e2e2; border-radius: .25em; -webkit-appearance: none; -moz-appearance: none; appearance: none;}
+
+      #analyzer { padding-top:35px;}
+      #analyzer .year_count { font-size:30px; color:#999 }
+      #analyzer .year_count .val { font-weight:bold; color:#ddd; display:inline-flex; width:1px;}
       .M { }
       .M .title { display:none; }
       .M .date { font-size:20px; color:#aaa; }
@@ -30,12 +34,25 @@
     </style>
     <script src='assets/jquery-3.4.1.min.js'></script>
     <script>
+      var analyzedData = {};
+      
+      function analyzeContent(_item) {
+          var year = _item.date.split(".")[0];
+          if(analyzedData[year] !== undefined) {
+              analyzedData[year].count++;
+          } else {
+              analyzedData[year] = {
+                  'count' : 1
+              };
+          }
+          analyzedData[year]
+      }
 
       function showContent(_json) {
           var viewer = $("#viewer");
 
           for(var i = 0; i < _json.length; i++) {
-              console.log(_json[i]);
+              analyzeContent(_json[i]);
               var post = $("<div class='post'>");
               switch(_json[i].type){
               case "M":
@@ -45,6 +62,9 @@
               case "1":
                   post = $("<div class='post B'>");
                   break;
+              case "2":
+                  viewer.html("사진은 뷰어에서 지원하지 않아요. README를 참조하셔서 다운로드해주세요 :)<br/> 본 페이지는 다이어리, 게시판, 블로그 포스트를 표시하는 용도의 뷰어입니다.");
+                  return;
               default:
                   break;
               }
@@ -61,6 +81,13 @@
                   }
               }
               viewer.append(post);
+          }
+
+          var analyzedViewer = $("#analyzer");
+          for(var idx in analyzedData) {
+              var year_count = $("<div class='year_count'>");
+              year_count.html(idx + " <div class='val'>" + analyzedData[idx].count + "</div>");
+              analyzedViewer.append(year_count);
           }
       }
       $(document).ready(function() {
@@ -138,6 +165,8 @@
         <label for="fileinput">파일 찾기</label>
         <input type="file" id="fileinput" />
       </div>
+    </div>
+    <div id='analyzer'>
     </div>
     <div id="viewer">
     </div>
