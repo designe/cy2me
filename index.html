@@ -9,13 +9,11 @@
       #header { text-align:center; height:45px; line-height:45px; font-weight:bold; font-size:25px; }
       #site { text-align:center; line-height:30px; padding:10px;}
       #description { text-align:center; border-top:1px solid #efefef; border-bottom:1px solid #efefef; line-height:30px; font-size:12px; }
-      #droparea {
-          width:90%;
-          line-height:100px;
-          background-color:#eee;
-          text-align:center;
-          margin-top:10px;
-      }
+      #droparea { width:90%;  background-color:#eee; text-align:center; margin-top:10px; padding:25px; color:#555; font-size:12px; }
+      #filebox {display:inline-flex; padding:10px; padding-bottom:0px;}
+      #filebox label { display: inline-block; padding: .5em .75em; color: #555; font-size: 12px; line-height: normal; vertical-align: middle; background-color: #fdfdfd; cursor: pointer; border: 1px solid #ebebeb; border-bottom-color: #e2e2e2; border-radius: .25em; }
+      #filebox input[type="file"] { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip:rect(0,0,0,0); border: 0; }
+      #filebox .upload-name { padding: .5em .75em; width:200px; font-size: 12px; font-family: inherit; line-height: normal; vertical-align: middle; background-color: #f5f5f5; border: 1px solid #ebebeb; border-bottom-color: #e2e2e2; border-radius: .25em; -webkit-appearance: none; -moz-appearance: none; appearance: none;}
       .M { }
       .M .title { display:none; }
       .M .date { font-size:20px; color:#aaa; }
@@ -87,52 +85,37 @@
               dropZone.css("background-color", "#E3F2FC");
           });
 
+
+          function loadFile(file) {
+              if(file != null) {
+                  if(file.length < 1) {
+                      alert('folder is not supported');
+                      return;
+                  }
+                  file = file[0];
+                  $("#fileinput").siblings('.upload-name').val(file.name);
+                  var reader = new FileReader();
+                  reader.onload = function(ee) {
+                      contents = ee.target.result;
+                      contents = JSON.parse(contents);
+                      $("#viewer").html("");
+                      showContent(contents);
+                  };
+
+                  reader.readAsText(file);
+              } else {
+                  alert('error');
+              }
+          }
+          
           dropZone.on('drop', function(e) {
               e.preventDefault();
-
               dropZone.css('background-color', '#EEEEEE');
-              var file = e.originalEvent.dataTransfer.files;
-              if(file != null) {
-                  if(file.length < 1) {
-                      alert('folder is not supported');
-                      return;
-                  }
-                  file = file[0];
-                  var reader = new FileReader();
-                  reader.onload = function(ee) {
-                      contents = ee.target.result;
-                      contents = JSON.parse(contents);
-                      $("#viewer").html("");
-                      showContent(contents);
-                  };
-
-                  reader.readAsText(file);
-              } else {
-                  alert('error');
-              }
+              loadFile(e.originalEvent.dataTransfer.files);
           });
 
-          var fileZone = $("#fileinput");
-          fileZone.on('change', function(e) {
-              file = this.files;
-              if(file != null) {
-                  if(file.length < 1) {
-                      alert('folder is not supported');
-                      return;
-                  }
-                  file = file[0];
-                  var reader = new FileReader();
-                  reader.onload = function(ee) {
-                      contents = ee.target.result;
-                      contents = JSON.parse(contents);
-                      $("#viewer").html("");
-                      showContent(contents);
-                  };
-
-                  reader.readAsText(file);
-              } else {
-                  alert('error');
-              }
+          $("#fileinput").on('change', function(e) {
+              loadFile(this.files);
           });
       });
     </script>
@@ -149,7 +132,12 @@
     </div>
     <center>
     <div id="droparea">
-      이 곳에 파일을 끌어놓으세요. | <input type="file" id="fileinput" />
+      이곳에 싸이월드 백업 파일을 끌어놓으세요.<br/>
+      <div id="filebox">
+        <input class="upload-name" value="파일선택" disabled="disabled">
+        <label for="fileinput">파일 찾기</label>
+        <input type="file" id="fileinput" />
+      </div>
     </div>
     <div id="viewer">
     </div>
