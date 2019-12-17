@@ -171,9 +171,12 @@
                                     if(post.type != "M")
                                         post.title = $("#cyco-post-title", output)[0].innerText.trim();
                                     var content = "";
-                                    var contentObj = $(".textData", output);
+                                    var imageObj = $("section .cyco-imagelet figure img", output);
+				    for(var i = 0; i < imageObj.length; i++)
+					content += "<img src ='http://nthumb.cyworld.com/thumb?v=0&width=810&url=" + decodeURIComponent(imageObj[i].getAttribute("srctext")) + "'/>";
+				    var contentObj = $(".textData", output);
                                     for(var i = 0; i < contentObj.length; i++)
-                                        content += contentObj[i].innerText.trim();
+                                        content += contentObj[i].innerHTML.trim();
                                     post.content = content;
                                     post.date = $(".view1", output)[0].innerText.trim().split(" ")[0].split('\t').pop();
                                     post.time = $(".view1", output)[0].innerText.trim().split(" ")[1];
