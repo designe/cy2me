@@ -71,7 +71,7 @@
 
               post.append($("<div class='title'>").text($('<textarea/>').html(_json[i].title).text()));
               post.append($("<div class='date'>").text(_json[i].date + "\t\t" + _json[i].time));
-              post.append($("<div class='content'>").text(_json[i].content));
+              post.append($("<div class='content'>").html(_json[i].content));
               if(_json[i].comments !== undefined) {
                   for(var j = 0; j < _json[i].comments.length; j++) {
                       var comment = $("<div class='comment'>");
@@ -127,6 +127,8 @@
                       try {
                           contents = JSON.parse(contents);
                           $("#viewer").html("");
+                          $("#analyzer").html("");
+                          analyzedData = {};
                           showContent(contents);
                       } catch(exception) {
                           alert("JSON이 아닙니다. 지원하지 않는 포맷입니다.");
