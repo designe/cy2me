@@ -10,7 +10,7 @@
 **본 페이지는 Windows PC 에서의 사용법입니다.**
  * MAC 유저는 아래 링크를 참조하세요.  
  https://github.com/designe/cy2me/blob/master/MACOS_howto.md
- * 문의 사항은 아래 링크에 댓글로 달아주세요.
+ * 문의 사항은 아래 링크에 댓글로 달아주세요.  
  https://blog.jbear.co/post/cyworld_backup/
 
  ### 필요한 도구
