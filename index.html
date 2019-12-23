@@ -8,8 +8,8 @@
       }
       #header { text-align:center; height:45px; line-height:45px; font-weight:bold; font-size:25px; }
       #site { text-align:center; line-height:30px; padding:10px;}
-      #description { text-align:center; border-top:1px solid #efefef; border-bottom:1px solid #efefef; line-height:30px; font-size:12px; }
-      #droparea { width:90%;  background-color:#eee; text-align:center; margin-top:10px; padding:25px; color:#555; font-size:12px; }
+      #description { text-align:center; border-top:1px solid #efefef; border-bottom:1px solid #efefef; line-height:30px; font-size:13px; }
+      #droparea { width:90%;  background-color:#eee; text-align:center; margin-top:10px; padding:25px; color:#555; font-size:13px; }
       #filebox {display:inline-flex; padding:10px; padding-bottom:0px;}
       #filebox label { display: inline-block; padding: .5em .75em; color: #555; font-size: 12px; line-height: normal; vertical-align: middle; background-color: #fdfdfd; cursor: pointer; border: 1px solid #ebebeb; border-bottom-color: #e2e2e2; border-radius: .25em; }
       #filebox input[type="file"] { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip:rect(0,0,0,0); border: 0; }
@@ -34,6 +34,7 @@
     </style>
     <script src='assets/jquery-3.4.1.min.js'></script>
     <script>
+      var contents = null;
       var analyzedData = {};
       
       function analyzeContent(_item) {
@@ -48,13 +49,24 @@
           analyzedData[year]
       }
 
-      function showContent(_json) {
-          var viewer = $("#viewer");
+      function reloadContent(_order) {
+        $("#viewer").html("");
+        $("#analyzer").html("");
+        analyzedData = {};
+        showContent(contents, _order);
+      }
 
+      function showContent(_json, _order=true) {
+          var viewer = $("#viewer");
+          
           for(var i = 0; i < _json.length; i++) {
-              analyzeContent(_json[i]);
+              var idx = i;
+              if(_order == false) {
+                idx = _json.length - (1 + i);
+              }
+              analyzeContent(_json[idx]);
               var post = $("<div class='post'>");
-              switch(_json[i].type){
+              switch(_json[idx].type){
               case "M":
                   post = $("<div class='post M'>");
                   break;
@@ -69,14 +81,14 @@
                   break;
               }
 
-              post.append($("<div class='title'>").text($('<textarea/>').html(_json[i].title).text()));
-              post.append($("<div class='date'>").text(_json[i].date + "\t\t" + _json[i].time));
-              post.append($("<div class='content'>").html(_json[i].content));
-              if(_json[i].comments !== undefined) {
-                  for(var j = 0; j < _json[i].comments.length; j++) {
+              post.append($("<div class='title'>").text($('<textarea/>').html(_json[idx].title).text()));
+              post.append($("<div class='date'>").text(_json[idx].date + "\t\t" + _json[idx].time));
+              post.append($("<div class='content'>").html(_json[idx].content));
+              if(_json[idx].comments !== undefined) {
+                  for(var j = 0; j < _json[idx].comments.length; j++) {
                       var comment = $("<div class='comment'>");
-                      comment.append($("<div class='name'>").text(_json[i].comments[j].name));
-                      comment.append($("<div class='value'>").text(_json[i].comments[j].value));
+                      comment.append($("<div class='name'>").text(_json[idx].comments[j].name));
+                      comment.append($("<div class='value'>").text(_json[idx].comments[j].value));
                       post.append(comment);
                   }
               }
@@ -84,9 +96,9 @@
           }
 
           var analyzedViewer = $("#analyzer");
-          for(var idx in analyzedData) {
+          for(var a_idx in analyzedData) {
               var year_count = $("<div class='year_count'>");
-              year_count.html(idx + " <div class='val'>" + analyzedData[idx].count + "</div>");
+              year_count.html(a_idx + " <div class='val'>" + analyzedData[a_idx].count + "</div>");
               analyzedViewer.append(year_count);
           }
       }
@@ -173,6 +185,10 @@
       </div>
     </div>
     <div id='analyzer'>
+    </div>
+    <div id='menu'>
+        <span id='asc_btn' onclick='reloadContent(false);'>오름차순</span>
+        <span id='dsc_btn' onclick='reloadContent(true);'>내림차순</span>
     </div>
     <div id="viewer">
     </div>
