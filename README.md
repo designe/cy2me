@@ -8,14 +8,15 @@
  * 사진첩은 포스팅한 날짜를 기준으로 Google Photos나 안드로이드 갤러리 등의 사진첩에서 쉽게 관리 가능
 
 **본 페이지는 Windows PC 에서의 사용법입니다.**
- * MAC 유저는 아래 링크를 참조하세요.
+ * MAC 유저는 아래 링크를 참조하세요.  
  https://github.com/designe/cy2me/blob/master/MACOS_howto.md
+ * 문의 사항은 아래 링크에 댓글로 달아주세요.
+ https://blog.jbear.co/post/cyworld_backup/
 
- ## 필요한 도구
+ ### 필요한 도구
  - Windows OS : 본 방법은 PC에서 사용 가능한 방법입니다!
  - Chrome Browser : Microsoft Edge, Firefox도 상관없음
-
-
+ 
 ### 아래 순서를 잘 따라하면 쉽게 백업이 가능하다.
 
 
@@ -50,6 +51,7 @@ var last_id,last_dt,tag_value,startdate,enddate,forder_id,airepageno,airecase,ai
 아래와 같이 백업 준비 완료되었다는 메세지가 뜰 것이다.
 ![cyworld8](https://github.com/designe/cy2me/blob/master/assets/cy8.png?raw=true)
 
+
 ## 5) 다이어리, 게시판, 블로그에 쓴 글 백업
 홈피의 방문자 기록을 보면 아래와 같이 백업 메뉴가 활성화된 모습을 볼 수 있다.
 
@@ -61,6 +63,7 @@ var last_id,last_dt,tag_value,startdate,enddate,forder_id,airepageno,airecase,ai
 
 버튼을 누르면 위와 같이 콘솔창에는 현재 상태가 뜨고, Finish가 뜨면 자동으로 백업 파일이 다운로드 된다.
 MyCyDiary_현재시간.txt 파일로 저장이 되어 있다.  브라우저 다운로드 목록을 확인해보자.  
+
 
 ## 5-1) 백업 파일 뷰어로 확인
 https://dev.jbear.co/cy2me  
