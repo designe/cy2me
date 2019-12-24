@@ -4,8 +4,8 @@
     <link href="https://fonts.googleapis.com/css?family=Noto+Sans+KR&display=swap" rel="stylesheet">
     <style>
       body {font-family: 'Noto Sans KR', sans-serif;}
-      .lds-ellipsis { display: none; position: relative;width: 80px;height: 80px;}
-    .lds-ellipsis div {position: absolute; top: 33px; width: 13px; height: 13px; border-radius: 50%; background: #ddd; animation-timing-function: cubic-bezier(0, 1, 1, 0);}
+      .lds-ellipsis { display: none; position: relative;width: 80px;height: 30px;}
+    .lds-ellipsis div {position: absolute; top: 10px; width: 13px; height: 13px; border-radius: 50%; background: #ddd; animation-timing-function: cubic-bezier(0, 1, 1, 0);}
     .lds-ellipsis div:nth-child(1) {left: 8px; animation: lds-ellipsis1 0.6s infinite;}
     .lds-ellipsis div:nth-child(2) { left: 8px; animation: lds-ellipsis2 0.6s infinite;}
     .lds-ellipsis div:nth-child(3) { left: 32px; animation: lds-ellipsis2 0.6s infinite;}
@@ -70,21 +70,21 @@
           analyzedData[year]
       }
 
-      function showLoadingBar() {
+      function wrapLoadingBar(callback) {
         $(".lds-ellipsis").css("display", "inline-block");          
-      }
-
-      function finishLoadingBar() {
-        $(".lds-ellipsis").css("display", "none");          
+        setTimeout(function() {
+            callback();
+            $(".lds-ellipsis").css("display", "none");              
+        }, 100);
       }
 
       function reloadContent(_order) {
-        showLoadingBar();
-        $("#viewer").html("");
-        $("#analyzer").html("");
-        analyzedData = {};
-        showContent(contents, _order);
-        finishLoadingBar();
+        wrapLoadingBar(function() {
+            $("#viewer").html("");
+            $("#analyzer").html("");
+            analyzedData = {};
+            showContent(contents, _order);
+        });
       }
 
       function showContent(_json, _order=true) {
@@ -166,18 +166,18 @@
                   $("#fileinput").siblings('.upload-name').val(file.name);
                   var reader = new FileReader();
                   reader.onload = function(ee) {
-                      showLoadingBar();
-                      contents = ee.target.result;
-                      try {
-                          contents = JSON.parse(contents);
-                          $("#viewer").html("");
-                          $("#analyzer").html("");
-                          analyzedData = {};
-                          showContent(contents);
-                      } catch(exception) {
-                          alert("JSON이 아닙니다. 지원하지 않는 포맷입니다.");
-                      }
-                      finishLoadingBar();
+                    wrapLoadingBar(function() {
+                        contents = ee.target.result;
+                        try {
+                            contents = JSON.parse(contents);
+                            $("#viewer").html("");
+                            $("#analyzer").html("");
+                            analyzedData = {};
+                            showContent(contents);
+                        } catch(exception) {
+                            alert("JSON이 아닙니다. 지원하지 않는 포맷입니다.");
+                        }
+                    });  
                   };
 
                   reader.readAsText(file);
