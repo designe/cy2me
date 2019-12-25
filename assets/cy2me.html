@@ -1,0 +1,234 @@
+<html>
+  <head>
+    <title> CY2ME </title>
+    <link href="https://fonts.googleapis.com/css?family=Noto+Sans+KR&display=swap" rel="stylesheet">
+    <link rel="shortcut icon" href="assets/cy2me_logo.ico">
+
+    <style>
+      body {font-family: 'Noto Sans KR', sans-serif;}
+      .lds-ellipsis { display: none; position: relative;width: 80px;height: 30px;}
+    .lds-ellipsis div {position: absolute; top: 10px; width: 13px; height: 13px; border-radius: 50%; background: #ddd; animation-timing-function: cubic-bezier(0, 1, 1, 0);}
+    .lds-ellipsis div:nth-child(1) {left: 8px; animation: lds-ellipsis1 0.6s infinite;}
+    .lds-ellipsis div:nth-child(2) { left: 8px; animation: lds-ellipsis2 0.6s infinite;}
+    .lds-ellipsis div:nth-child(3) { left: 32px; animation: lds-ellipsis2 0.6s infinite;}
+    .lds-ellipsis div:nth-child(4) {left: 56px;animation: lds-ellipsis3 0.6s infinite; }
+    @keyframes lds-ellipsis1 { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+    @keyframes lds-ellipsis3 { 0% { transform: scale(1); } 100% { transform: scale(0); } }
+    @keyframes lds-ellipsis2 { 0% { transform: translate(0, 0); } 100% { transform: translate(24px, 0); } }
+
+    #header { text-align:center; height:45px; line-height:45px; font-weight:bold; font-size:25px; }
+    #site { text-align:center; line-height:30px; padding:10px;}
+    #description { text-align:center; border-top:1px solid #efefef; border-bottom:1px solid #efefef; line-height:30px; font-size:13px; }
+    #droparea { width:90%;  background-color:#eee; text-align:center; margin-top:10px; padding:25px; color:#555; font-size:13px; }
+    #filebox {display:inline-flex; padding:10px; padding-bottom:0px;}
+    #filebox label { display: inline-block; padding: .5em .75em; color: #555; font-size: 12px; line-height: normal; vertical-align: middle; background-color: #fdfdfd; cursor: pointer; border: 1px solid #ebebeb; border-bottom-color: #e2e2e2; border-radius: .25em; }
+    #filebox input[type="file"] { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip:rect(0,0,0,0); border: 0; }
+    #filebox .upload-name { padding: .5em .75em; width:200px; font-size: 12px; font-family: inherit; line-height: normal; vertical-align: middle; background-color: #f5f5f5; border: 1px solid #ebebeb; border-bottom-color: #e2e2e2; border-radius: .25em; -webkit-appearance: none; -moz-appearance: none; appearance: none;}
+
+    #analyzer { padding-top:35px;}
+    #analyzer .year_count { font-size:30px; color:#999 }
+    #analyzer .year_count .val { font-weight:bold; color:#ddd; display:inline-flex; width:1px;}
+
+    #menu { padding:5px; }
+    #menu .order-btn { cursor:pointer; display: inline-block; padding: .5em .75em; color: #555; font-size: 12px; line-height: normal; vertical-align: middle; background-color: #fdfdfd; cursor: pointer; border: 1px solid #ebebeb; border-bottom-color: #e2e2e2; border-radius: .25em;}
+
+    #viewer { width:800px; text-align:left; }
+    .M { }
+    .M .title { display:none; }
+    .M .date { font-size:20px; color:#aaa; }
+    .B { }
+    .B .title { }
+    .post { padding:3%;  }
+    .post .title { font-size:20px; font-weight:bold; padding-bottom:5px; padding-right:5px; padding-left:5px;  border-bottom:5px solid #777; clear:both;}
+    .post .date {padding:5px;}
+    .post .time {padding:5px;}
+    .post .content{padding:5px; border-top:1px solid #ddd; border-bottom:1px solid #ddd;  background-color:#efefef;}
+    .post .comment { clear:both; }
+    .post .comment .name { float:left; font-weight:bold; padding:5px;}
+    .post .comment .value { float:left; padding:5px; max-width:90%; text-align:left;}
+    </style>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-154897877-1"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-154897877-1');
+    </script>
+    <script src='assets/jquery-3.4.1.min.js'></script>
+    <script>
+      var contents = null;
+      var analyzedData = {};
+      
+      function analyzeContent(_item) {
+          var year = _item.date.split(".")[0];
+          if(analyzedData[year] !== undefined) {
+              analyzedData[year].count++;
+          } else {
+              analyzedData[year] = {
+                  'count' : 1
+              };
+          }
+          analyzedData[year]
+      }
+
+      function wrapLoadingBar(callback) {
+        $(".lds-ellipsis").css("display", "inline-block");          
+        setTimeout(function() {
+            callback();
+            $(".lds-ellipsis").css("display", "none");              
+        }, 100);
+      }
+
+      function reloadContent(_order) {
+        wrapLoadingBar(function() {
+            $("#viewer").html("");
+            $("#analyzer").html("");
+            analyzedData = {};
+            showContent(contents, _order);
+        });
+      }
+
+      function showContent(_json, _order=true) {
+          var viewer = $("#viewer");
+          
+          for(var i = 0; i < _json.length; i++) {
+              var idx = i;
+              if(_order == false) {
+                idx = _json.length - (1 + i);
+              }
+              analyzeContent(_json[idx]);
+              var post = $("<div class='post'>");
+              switch(_json[idx].type){
+              case "M":
+                  post = $("<div class='post M'>");
+                  break;
+              case "B":
+              case "1":
+                  post = $("<div class='post B'>");
+                  break;
+              case "2":
+                  viewer.html("사진은 뷰어에서 지원하지 않아요. README를 참조하셔서 다운로드해주세요 :)<br/> 본 페이지는 다이어리, 게시판, 블로그 포스트를 표시하는 용도의 뷰어입니다.");
+                  return;
+              default:
+                  break;
+              }
+
+              post.append($("<div class='title'>").text($('<textarea/>').html(_json[idx].title).text()));
+              post.append($("<div class='date'>").text(_json[idx].date + "\t\t" + _json[idx].time));
+              post.append($("<div class='content'>").html(_json[idx].content));
+              if(_json[idx].comments !== undefined) {
+                  for(var j = 0; j < _json[idx].comments.length; j++) {
+                      var comment = $("<div class='comment'>");
+                      comment.append($("<div class='name'>").text(_json[idx].comments[j].name));
+                      comment.append($("<div class='value'>").text(_json[idx].comments[j].value));
+                      post.append(comment);
+                  }
+              }
+              viewer.append(post);
+          }
+
+          var analyzedViewer = $("#analyzer");
+          for(var a_idx in analyzedData) {
+              var year_count = $("<div class='year_count'>");
+              year_count.html(a_idx + " <div class='val'>" + analyzedData[a_idx].count + "</div>");
+              analyzedViewer.append(year_count);
+          }
+      }
+      $(document).ready(function() {
+          var dropZone = $("#droparea");
+          dropZone.on('dragenter', function(e) {
+              e.stopPropagation();
+              e.preventDefault();
+              dropZone.css('background-color', "#E3F2FC");
+          });
+
+          dropZone.on('dragleave', function(e) {
+              e.stopPropagation();
+              e.preventDefault();
+
+              dropZone.css('background-color', "#EEEEEE");
+          });
+
+          dropZone.on('dragover', function(e) {
+              e.stopPropagation();
+              e.preventDefault();
+
+              dropZone.css("background-color", "#E3F2FC");
+          });
+
+
+          function loadFile(file) {
+              if(file != null) {
+                  if(file.length < 1) {
+                      alert('folder is not supported');
+                      return;
+                  }
+                  file = file[0];
+                  $("#fileinput").siblings('.upload-name').val(file.name);
+                  var reader = new FileReader();
+                  reader.onload = function(ee) {
+                    wrapLoadingBar(function() {
+                        contents = ee.target.result;
+                        try {
+                            contents = JSON.parse(contents);
+                            $("#viewer").html("");
+                            $("#analyzer").html("");
+                            analyzedData = {};
+                            showContent(contents);
+                        } catch(exception) {
+                            alert("JSON이 아닙니다. 지원하지 않는 포맷입니다.");
+                        }
+                    });  
+                  };
+
+                  reader.readAsText(file);
+              } else {
+                  alert('error');
+              }
+          }
+          
+          dropZone.on('drop', function(e) {
+              e.preventDefault();
+              dropZone.css('background-color', '#EEEEEE');
+              loadFile(e.originalEvent.dataTransfer.files);
+          });
+
+          $("#fileinput").on('change', function(e) {
+              loadFile(this.files);
+          });
+      });
+    </script>
+  </head>
+  <body>
+    <div id='header'>
+      CY2ME Viewer
+    </div>
+    <div id='site'>
+      README  / <a href = 'https://github.com/designe/cy2me' target='_blank'> https://github.com/designe/cy2me </a>
+    </div>
+    <div id='description'>
+      본 페이지는 cy2me를 통해 백업받은 텍스트 파일을 보다 깔끔하게 확인할 수 있도록 도와주는 뷰어입니다.
+    </div>
+    <center>
+    <div id="droparea">
+      이곳에 싸이월드 백업 파일을 끌어놓으세요.<br/>
+      <div id="filebox">
+        <input class="upload-name" value="파일선택" disabled="disabled">
+        <label for="fileinput">파일 찾기</label>
+        <input type="file" id="fileinput" />
+      </div>
+    </div>
+    <div id='menu'>
+        <span class='order-btn' onclick='reloadContent(false);'>오름차순</span>
+        <span class='order-btn' onclick='reloadContent(true);'>내림차순</span>
+        <span class='order-btn'><a href = 'https://raw.githubusercontent.com/designe/cy2me/master/assets/cy2me.html' download> CY2ME Viewer Download </a></span><br/>
+        <div class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>
+    </div>
+    <div id='analyzer'>
+    </div>
+    <div id="viewer">
+    </div>
+    </center>
+  </body>
+</html>
