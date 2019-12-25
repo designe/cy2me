@@ -91,7 +91,7 @@
 
       function downloadViewer() {
           (function(){
-              document.location = 'data:text/attachment;,' + document.documentElement.innerHTML;
+              document.location = 'data:text/attachment;base64,' + window.btoa(unescape(encodeURIComponent(document.documentElement.innerHTML)));
           })();
       }
 
