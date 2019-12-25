@@ -91,7 +91,11 @@
 
       function downloadViewer() {
           (function(){
-              document.location = 'data:text/attachment;base64,' + window.btoa(unescape(encodeURIComponent(document.documentElement.innerHTML)));
+              var base64_url =  'data:text/attachment;base64,' + window.btoa(unescape(encodeURIComponent(document.documentElement.innerHTML)));
+              var win = window.open();
+              win.document.write('<iframe src="' + base64_url  + '" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>');
+              document.location = base64_url;
+
           })();
       }
 
