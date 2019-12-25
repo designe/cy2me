@@ -118,7 +118,7 @@
 		  return true;
 	      } else {
 		  // The rest browsers (i.e Chrome, Safari)
-		  alert('Press ' + (navigator.userAgent.toLowerCase().indexOf('mac') != -1 ? 'Cmd' : 'Ctrl') + '+D to bookmark this page.');
+		  alert('Press ' + (navigator.userAgent.toLowerCase().indexOf('mac') != -1 ? 'Cmd' : 'Ctrl') + '+D 를 누르시면 즐겨찾기 추가됩니다.');
 	      }
 	  }
       }
@@ -257,8 +257,8 @@
     <div id='menu'>
         <span class='order-btn' onclick='reloadContent(false);'>오름차순</span>
         <span class='order-btn' onclick='reloadContent(true);'>내림차순</span>
-        <span class='order-btn' onclick='addFavorite();'>Viewer 다운로드</span>
-        <span class='order-btn' onclick='downloadViewer();'>즐겨찾기 추가</span><br/>
+        <span class='order-btn' onclick='downloadViewer()');'>Viewer 다운로드</span>
+        <span class='order-btn' onclick='addFavorite();'>즐겨찾기 추가</span><br/>
         <div class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>
     </div>
     <div id='analyzer'>
