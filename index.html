@@ -101,6 +101,28 @@
           })();
       }
 
+      function addFavorite() {
+          pageTitle=document.title;
+	  pageURL=document.location;
+
+          try {
+	      // Mozilla Firefox solution
+	      window.sidebar.addPanel(pageTitle, pageURL, "");
+	  }
+	  catch (e) {
+	      // Opera solution
+	      if (typeof(opera)=="object") {
+		  a.rel="sidebar";
+		  a.title=pageTitle;
+		  a.url=pageURL;
+		  return true;
+	      } else {
+		  // The rest browsers (i.e Chrome, Safari)
+		  alert('Press ' + (navigator.userAgent.toLowerCase().indexOf('mac') != -1 ? 'Cmd' : 'Ctrl') + '+D to bookmark this page.');
+	      }
+	  }
+      }
+
       function showContent(_json, _order=true) {
           var viewer = $("#viewer");
           
@@ -235,7 +257,8 @@
     <div id='menu'>
         <span class='order-btn' onclick='reloadContent(false);'>오름차순</span>
         <span class='order-btn' onclick='reloadContent(true);'>내림차순</span>
-        <span class='order-btn' onclick='downloadViewer();'>CY2ME Viewer Download</span><br/>
+        <span class='order-btn' onclick='addFavorite();'>Viewer 다운로드</span><br/>
+        <span class='order-btn' onclick='downloadViewer();'>즐겨찾기 추가</span><br/>
         <div class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>
     </div>
     <div id='analyzer'>
