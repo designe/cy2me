@@ -100,6 +100,35 @@ function collectBlogs(comment=true) {
     }, 300);
 }
 
+
+function collect2015(comment=true) {
+    activateReply = comment;
+    console.log("Start new content backup :)");
+    $("#newcontent-backup-status .backup-message").css("display", "none");
+    $("#newcontent-backup-status .lds-hourglass").css("display", "inline-block");
+    setTimeout(function() {
+        readAllCyPosts("P");
+        var file = new Blob([JSON.stringify(allPosts, null, 1)], {type: "text/plain;charset=utf-8"});
+        saveAs("MyCyNewContents_" + Date().replace(/\ /gi, "_").split("_GMT")[0] + ".txt", file);
+        $("#newcontent-backup-status .lds-hourglass").css("display", "none");
+        $("#newcontent-backup-status .backup-message").css("display", "inline-block");
+    }, 300);
+}
+
+function collectStatus(comment=true) {
+    activateReply = comment;
+    console.log("Start status backup :)");
+    $("#status-backup-status .backup-message").css("display", "none");
+    $("#status-backup-status .lds-hourglass").css("display", "inline-block");
+    setTimeout(function() {
+        readAllCyPosts("T");
+        var file = new Blob([JSON.stringify(allPosts, null, 1)], {type: "text/plain;charset=utf-8"});
+        saveAs("MyCyStatus_" + Date().replace(/\ /gi, "_").split("_GMT")[0] + ".txt", file);
+        $("#status-backup-status .lds-hourglass").css("display", "none");
+        $("#status-backup-status .backup-message").css("display", "inline-block");
+    }, 300);
+}
+
 function collectPhotos() {
     activateReply = false;
     console.log("Start photo backup :)");
@@ -168,7 +197,8 @@ function readCyPost(cnt, t) {
                         "type" : value.serviceType,
                         "writer" : value.writer,
                         "viewCount" : value.viewCount,
-                    }
+                    };
+                    
                     var downloadStatus;
                     switch(post.type) {
                     case "2": /* include images */
@@ -177,6 +207,12 @@ function readCyPost(cnt, t) {
                         break;
                     case "1": /* Board */
                         downloadStatus = $("#board-backup-status");
+                        break;
+                    case "P": /* 2015 */
+                        downloadStatus = $("#newcontent-backup-status");
+                        break;
+                    case "T": /* Intro */
+                        downloadStatus = $("#status-backup-status");
                         break;
                     case "M": /* Diary */
                         downloadStatus = $("#diary-backup-status");
@@ -262,7 +298,7 @@ function initializeCy2me() {
     var css = '<style>\n.lds-hourglass { display: none;  position: relative;  width: 22px;  height: 22px; }\n';
     css += ' .lds-hourglass:after {  content: " ";  display: block;  border-radius: 50%;  width: 0;  height: 0;  margin:6px;  box-sizing: border-box;  border: 10px solid #bbb;  border-color: #bbb transparent #bbb transparent;  animation: lds-hourglass 1.2s infinite;}\n';
     css += ' @keyframes lds-hourglass {  0% {    transform: rotate(0);    animation-timing-function: cubic-bezier(0.55, 0.055, 0.675, 0.19);  }  50% {    transform: rotate(900deg); animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);  }  100% {    transform: rotate(1800deg);  }}\n';
-    css += '.backup-btn { cursor:pointer; line-height:25px; color:#777; }\n';
+    css += '.backup-btn { cursor:pointer; font-size:13px; line-height:25px; color:#777; }\n';
     css += '.backup-status { display:inline-block; font-weight:normal; color:#fe8536;} \n';
     css += '.backup-message { display:inline-block; padding-left:5px; display:none;} \n';
     css += "</style>";
@@ -277,6 +313,11 @@ function initializeCy2me() {
     var blogStatus = $("<div id='blog-backup-status' class='backup-status'><div class='lds-hourglass'></div><div class='backup-message'>done</div></span>");
     var photoBtn = $("<span class='backup-btn'>").text("사진첩 백업").click(collectPhotos);
     var photoStatus = $("<div id='photo-backup-status' class='backup-status'><div class='lds-hourglass'></div><div class='backup-message'>done</div></span>");
+    var newContentBtn = $("<span class='backup-btn'>").text("2015 이후 백업").click(collect2015);
+    var newContentStatus = $("<div id='newcontent-backup-status' class='backup-status'><div class='lds-hourglass'></div><div class='backup-message'>done</div></span>");
+    var statusBtn = $("<span class='backup-btn'>").text("상태 메세지 백업").click(collectStatus);
+    var statusStatus = $("<div id='status-backup-status' class='backup-status'><div class='lds-hourglass'></div><div class='backup-message'>done</div></span>");
+    
     $(".profile dfn:first").append(diaryBtn);
     $(".profile dfn:first").append(diaryStatus);
     $(".profile dfn:first").append($("<em>"));
@@ -285,9 +326,15 @@ function initializeCy2me() {
     $(".profile dfn:first").append($("<em>"));
     $(".profile dfn:first").append(blogBtn);
     $(".profile dfn:first").append(blogStatus);
-    $(".profile dfn:first").append($("<em>"));
+    $(".profile dfn:first").append($("<br>"));
     $(".profile dfn:first").append(photoBtn);
     $(".profile dfn:first").append(photoStatus);
+    $(".profile dfn:first").append($("<em>"));
+    $(".profile dfn:first").append(newContentBtn);
+    $(".profile dfn:first").append(newContentStatus);
+    $(".profile dfn:first").append($("<em>"));
+    $(".profile dfn:first").append(statusBtn);
+    $(".profile dfn:first").append(statusStatus);
 }
 
 initializeCy2me();
