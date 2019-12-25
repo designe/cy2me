@@ -24,13 +24,14 @@
  ![cyworld1](https://github.com/designe/cy2me/blob/master/assets/cy1.PNG?raw=true)
  
  싸이월드 계정을 까먹었을꺼다.  
- 얼른 아이디/비밀번호부터 찾아서 로그인하자.
+ 얼른 아이디/비밀번호부터 찾아서 로그인
  
 
 ## 2) 싸이월드에 홈피 접속
 ![cyworld2](https://github.com/designe/cy2me/blob/master/assets/cy2.PNG?raw=true)
   
- 백업을 하려면 예전의 미니홈피를 접속해야하는데 오른쪽 상단에 파란 동그라미 쳐놓은 프로필 이미지를 선택
+ 백업을 하려면 예전의 미니홈피를 접속해야하는데  
+ 오른쪽 상단에 파란 동그라미 쳐놓은 프로필 이미지를 선택
 
 
 ## 3) Chrome Devtool 실행
@@ -57,7 +58,8 @@ var last_id,last_dt,tag_value,startdate,enddate,forder_id,airepageno,airecase,ai
 
 ![image](https://user-images.githubusercontent.com/1748714/71323608-6c9ea300-2518-11ea-9bfc-f3bcf518fdda.png)
 
-남은 일은? 원하는 버튼을 누르기만 하면 된다 :)
+남은 일은?  
+원하는 버튼을 누르기만 하면 된다 :)
 
 ![image](https://user-images.githubusercontent.com/1748714/71323712-a45a1a80-2519-11ea-966c-a1abb6b75fd4.png)
 

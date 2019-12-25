@@ -8,6 +8,10 @@
  * 사진첩은 포스팅한 날짜를 기준으로 Google Photos나 안드로이드 갤러리 등의 사진첩에서 쉽게 관리 가능
  
  **본 페이지에서는 MAC OS에서의 방법을 설명드립니다.**
+  * Windows 사용자는 아래 링크를 참조하세요.  
+  https://github.com/designe/cy2me
+  * 문의 사항은 아래 링크에 댓글로 달아주세요.  
+  https://blog.jbear.co/post/cyworld_backup/
 
 
  ## 필요한 도구
@@ -22,7 +26,7 @@
  ![cyworld1](https://github.com/designe/cy2me/blob/master/assets/cy1.PNG?raw=true)
  
  싸이월드 계정을 까먹었을꺼다.  
- 얼른 아이디/비밀번호부터 찾아서 로그인하자.
+ 얼른 아이디/비밀번호부터 찾아서 로그인
  
 
 ## 2. 싸이월드에 홈피 접속
@@ -56,7 +60,8 @@ var last_id,last_dt,tag_value,startdate,enddate,forder_id,airepageno,airecase,ai
 
 ![image](https://user-images.githubusercontent.com/1748714/71323608-6c9ea300-2518-11ea-9bfc-f3bcf518fdda.png)
 
-남은 일은? 원하는 버튼을 누르기만 하면 된다 :)
+남은 일은?  
+원하는 버튼을 누르기만 하면 된다 :)
 
 ![image](https://user-images.githubusercontent.com/1748714/71323712-a45a1a80-2519-11ea-966c-a1abb6b75fd4.png)
 
@@ -72,7 +77,7 @@ https://dev.jbear.co/cy2me
 이건 조금 어려우니 집중해서 따라하길 바란다.
 
 
-## 6. 사진 수집 시작 (Windows에서의 사용법)
+## 6. 사진 수집 시작 (MAC OS 에서의 사용법)
 
 시작은 비슷하다. 사진첩 백업 버튼을 클릭해보자.    
 수집이 완료되면 MyCyPhotos_현재시간.txt가 다운로드된다.  
@@ -86,7 +91,7 @@ terminal 을 실행해보자.
 ```bash
 mkdir cyphotos
 ```
-만들어진 cyphotos라는 폴더에 collectPhotos() 명령으로 받았던 MyCyPhotos 텍스트 파일을 이동시킨다.
+만들어진 cyphotos라는 폴더에 다운로드 받은 MyCyPhotos_blah.txt 텍스트 파일을 이동시킨다.
 ```bash
 cd cyphotos
 mv ~/Downloads/MyCyPhotos_***.txt ./
