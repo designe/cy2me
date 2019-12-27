@@ -30,7 +30,8 @@
     #analyzer .year_count .val { font-weight:bold; color:#ddd; display:inline-flex; width:1px;}
 
     #menu { padding:5px; }
-    #menu .order-btn { cursor:pointer; display: inline-block; padding: .5em .75em; color: #555; font-size: 12px; line-height: normal; vertical-align: middle; background-color: #fdfdfd; cursor: pointer; border: 1px solid #ebebeb; border-bottom-color: #e2e2e2; border-radius: .25em;}
+    #menu .order-btn { cursor:pointer; display: inline-block; padding: .5em .75em; color: #555; font-size: 12px; line-height: normal; vertical-align: middle; background-color: #0E4C92; cursor: pointer; border: 1px solid #ebebeb; border-bottom-color: #e2e2e2; border-radius: .25em;}
+    #menu .normal-btn { cursor:pointer; display: inline-block; padding: .5em .75em; color: #555; font-size: 12px; line-height: normal; vertical-align: middle; background-color: #fdfdfd; cursor: pointer; border: 1px solid #ebebeb; border-bottom-color: #e2e2e2; border-radius: .25em; }
 
     #viewer { width:800px; text-align:left; }
     .M { }
@@ -116,8 +117,12 @@
       }
 
       function downloadPhotos() {
-        var file = new Blob([printImageList()], {type: "text/plain;charset=utf-8"});
-        saveAs("MyCyPhotos_download_script_" + Date().replace(/\ /gi, "_").split("_GMT")[0] + ".txt", file);
+        if(contents) {
+            var file = new Blob([printImageList()], {type: "text/plain;charset=utf-8"});
+            saveAs("MyCyPhotos_download_script_" + Date().replace(/\ /gi, "_").split("_GMT")[0] + ".txt", file);
+        } else {
+            alert("컨텐츠가 비어있습니다.");
+        }
       }
 
       function downloadViewer() {
@@ -287,8 +292,8 @@
         <span class='order-btn' onclick='reloadContent(false);'>오름차순</span>
         <span class='order-btn' onclick='reloadContent(true);'>내림차순</span>
         <span class='order-btn' onclick='downloadPhotos()');'>모든 사진 다운로드</span>
-        <span class='order-btn' onclick='downloadViewer()');'>Viewer 다운로드</span>
-        <span class='order-btn' onclick='addFavorite();'>즐겨찾기 추가</span><br/>
+        <span class='normal-btn' onclick='downloadViewer()');'>Viewer 다운로드</span>
+        <span class='normal-btn' onclick='addFavorite();'>즐겨찾기 추가</span><br/>
         <div class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>
     </div>
     <div id='analyzer'>
