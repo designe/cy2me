@@ -89,9 +89,23 @@
         });
       }
 
+      function saveAs(filename, file) {
+        var a = document.createElement("a"),
+        url = URL.createObjectURL(file);
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function() {
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);  
+        }, 0); 
+      }
+
       function printImageList() {
         var ret = "";
         var imageCount = 0;
+        var allPosts = contents;
         for(var i = 0 ; i < allPosts.length; i++) {
             if(allPosts[i].type != "2")
                 continue;
@@ -102,7 +116,8 @@
       }
 
       function downloadPhotos() {
-                
+        var file = new Blob([printImageList()], {type: "text/plain;charset=utf-8"});
+        saveAs("MyCyPhotos_download_script_" + Date().replace(/\ /gi, "_").split("_GMT")[0] + ".txt", file);
       }
 
       function downloadViewer() {
@@ -271,7 +286,7 @@
     <div id='menu'>
         <span class='order-btn' onclick='reloadContent(false);'>오름차순</span>
         <span class='order-btn' onclick='reloadContent(true);'>내림차순</span>
-        <!--<span class='order-btn' onclick='downloadPhotos()');'>모든 사진 다운로드</span>-->
+        <span class='order-btn' onclick='downloadPhotos()');'>모든 사진 다운로드</span>
         <span class='order-btn' onclick='downloadViewer()');'>Viewer 다운로드</span>
         <span class='order-btn' onclick='addFavorite();'>즐겨찾기 추가</span><br/>
         <div class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>
