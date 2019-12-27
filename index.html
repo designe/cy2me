@@ -89,6 +89,22 @@
         });
       }
 
+      function printImageList() {
+        var ret = "";
+        var imageCount = 0;
+        for(var i = 0 ; i < allPosts.length; i++) {
+            if(allPosts[i].type != "2")
+                continue;
+            imageCount++;
+            ret += "http://nthumb.cyworld.com/thumb?v=0&width=810&url=" + allPosts[i].image + " " + allPosts[i].date.replace(/\./gi, "") + "_" + allPosts[i].time.replace(/\:/gi, "") + "00." + imageCount + "." + allPosts[i].image.split(".").pop() + " " + allPosts[i].date.replace(/\./gi, ":") + " " + allPosts[i].time + "\n";
+        }
+        return ret;
+      }
+
+      function downloadPhotos() {
+                
+      }
+
       function downloadViewer() {
           (function(){
               var base64_url =  'data:text/attachment;base64,' + window.btoa(unescape(encodeURIComponent(document.documentElement.innerHTML)));
@@ -139,11 +155,9 @@
                   break;
               case "B":
               case "1":
+              case "2":
                   post = $("<div class='post B'>");
                   break;
-              case "2":
-                  viewer.html("사진은 뷰어에서 지원하지 않아요. README를 참조하셔서 다운로드해주세요 :)<br/> 본 페이지는 다이어리, 게시판, 블로그 포스트를 표시하는 용도의 뷰어입니다.");
-                  return;
               default:
                   break;
               }
@@ -257,6 +271,7 @@
     <div id='menu'>
         <span class='order-btn' onclick='reloadContent(false);'>오름차순</span>
         <span class='order-btn' onclick='reloadContent(true);'>내림차순</span>
+        <!--<span class='order-btn' onclick='downloadPhotos()');'>모든 사진 다운로드</span>-->
         <span class='order-btn' onclick='downloadViewer()');'>Viewer 다운로드</span>
         <span class='order-btn' onclick='addFavorite();'>즐겨찾기 추가</span><br/>
         <div class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>
