@@ -129,14 +129,14 @@ function collectStatus(comment=true) {
     }, 300);
 }
 
-function collectPhotos() {
-    activateReply = false;
+function collectPhotos(comment=true) {
+    activateReply = comment;
     console.log("Start photo backup :)");
     $("#photo-backup-status .backup-message").css("display", "none");
     $("#photo-backup-status .lds-hourglass").css("display", "inline-block");
     setTimeout(function() {
         readAllCyPosts("2");
-        var file = new Blob([printImageList()], {type: "text/plain;charset=utf-8"});
+        var file = new Blob([JSON.stringify(allPosts, null, 1)], {type: "text/plain;charset=utf-8"});
         saveAs("MyCyPhotos_" + Date().replace(/\ /gi, "_").split("_GMT")[0] + ".txt", file);
         $("#photo-backup-status .lds-hourglass").css("display", "none");
         $("#photo-backup-status .backup-message").css("display", "inline-block");
