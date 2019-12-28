@@ -4,12 +4,15 @@
  이는 백업을 하려는 사용자들로 하여금 불안함을 유발할 수 있는 원인이 된다.  
  본 방법은 따로 프로그램화하지 않고, 간단하게 브라우저만으로 백업할 수 있는 솔루션을 제공한다.  
  
+ * 사용자가 하나 하나 백업하는 방법을 간단하게 자동으로 스크립트화 하였음.
  * 다이어리, 게시판, 사진첩, 블로그, 상태 메세지, 2015년 이후 컨텐츠 백업 가능
  * 사진첩은 포스팅한 날짜를 기준으로 Google Photos나 안드로이드 갤러리 등의 사진첩에서 쉽게 관리 가능
 
 **본 페이지는 Windows PC 에서의 사용법입니다.**
  * MAC 유저는 아래 링크를 참조하세요.  
  https://github.com/designe/cy2me/blob/master/MACOS_howto.md
+ * 어려우신 분들은 영상 보면서 따라해봐요 Thanks Calmlog!  
+ https://www.youtube.com/watch?v=2Xf5eXCB-wU
  * 문의 사항은 아래 링크에 댓글로 달아주세요.  
  https://blog.jbear.co/post/cyworld_backup/
 
