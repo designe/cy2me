@@ -105,6 +105,12 @@ mv ~/Downloads/MyCyPhotos_download_script_***.txt ./
 ```bash
 awk '{print $1 " -O " $2}' MyCyPhotos_download_script_***.txt | xargs -n3 wget
 ```
+wget이 없는 경우 위 명령어가 동작안할 수도 있는데,  
+그럴땐 아래와 같이 curl이라는 명령어로 대체해서 사용한다.
+```bash
+awk '{print $1 " -O " $2}' MyCyPhotos_download_script_***.txt | xargs -n3 curl
+```
+
 
 **추가 팁 : 고급 Option**  
 exiftool을 쓰면 사진 찍은 날짜를 포스팅 올린 날짜로 일괄 변경해준다.  
