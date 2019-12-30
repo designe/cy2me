@@ -93,7 +93,7 @@ Win + R 을 누르면 실행창이 뜨고, 여기다가 powershell을 누르면 
 
 ![cyworld5](https://github.com/designe/cy2me/blob/master/assets/cy5.PNG?raw=true)
 ```bash
-Get-Content .\MyCyPhotos_download_script_현재시간.txt | %{ wget $_.split(" ")[0] -OutFile $_.split(" ")[1];}
+Get-Content .\MyCyPhotos_download_script_현재시간.txt | %{ Invoke-WebRequest $_.split(" ")[0] -OutFile $_.split(" ")[1];}
 ```
 
 위에 명령어 치면 막 다운로드 받아지는게 느껴진다.
