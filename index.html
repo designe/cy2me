@@ -107,13 +107,24 @@
       function printImageList() {
         var ret = "";
         var imageCount = 0;
+
+        var allImages = $("img");
+        for(var i = 0; i < allImages.length; i++) {
+            imageCount++;
+            var img_path = allImages[i].src;
+            var img_extension = img_path.split(".").pop();
+            var dt = $(".date", allImages[i].parentNode.parentNode)[0].innerText.split(" ")[0];
+            var tm = $(".date", allImages[i].parentNode.parentNode)[0].innerText.split(" ")[1];
+            ret += img_path + " " + dt.replace(/\./gi, "") + "_" + tm.replace(/\:/gi, "") + "00." + imageCount + "." + img_extension + " " + dt.replace(/\./gi, ":") + " " + tm + "\n";
+        }
+        /*
         var allPosts = contents;
         for(var i = 0 ; i < allPosts.length; i++) {
             if(allPosts[i].type != "2")
                 continue;
             imageCount++;
             ret += "http://nthumb.cyworld.com/thumb?v=0&width=810&url=" + allPosts[i].image + " " + allPosts[i].date.replace(/\./gi, "") + "_" + allPosts[i].time.replace(/\:/gi, "") + "00." + imageCount + "." + allPosts[i].image.split(".").pop() + " " + allPosts[i].date.replace(/\./gi, ":") + " " + allPosts[i].time + "\n";
-        }
+        }*/
         return ret;
       }
 
