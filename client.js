@@ -20,7 +20,6 @@ else{
     home_idx = 0;
 }
 
-
 function getBase64Image(img) {
     var canvas = document.createElement("canvas");
     canvas.width = img.width;
@@ -69,6 +68,20 @@ function collectDiaries(comment=true) {
         saveAs("MyCyDiary_" + Date().replace(/\ /gi, "_").split("_GMT")[0] + ".txt", file);
         $("#diary-backup-status .lds-hourglass").css("display", "none");
         $("#diary-backup-status .backup-message").css("display", "inline-block");
+    }, 300);
+}
+
+function collectShareDiaries(comment=true) {
+    activateReply = comment;
+    console.log("Start diary backup :)");
+    $("#share-diary-backup-status .backup-message").css("display", "none");
+    $("#share-diary-backup-status .lds-hourglass").css("display", "inline-block");
+    setTimeout(function() {
+        readAllCyPosts("O");
+        var file = new Blob([JSON.stringify(allPosts, null, 1)], {type: "text/plain;charset=utf-8"});
+        saveAs("MyCyShareDiary_" + Date().replace(/\ /gi, "_").split("_GMT")[0] + ".txt", file);
+        $("#share-diary-backup-status .lds-hourglass").css("display", "none");
+        $("#share-diary-backup-status .backup-message").css("display", "inline-block");
     }, 300);
 }
 
@@ -199,26 +212,21 @@ function readCyPost(cnt, t) {
                         "viewCount" : value.viewCount,
                     };
                     
-                    var downloadStatus;
                     switch(post.type) {
                     case "2": /* include images */
                         post.image = value.summaryModel.image;
-                        downloadStatus = $("#photo-backup-status");
                         break;
                     case "1": /* Board */
-                        downloadStatus = $("#board-backup-status");
                         break;
                     case "P": /* 2015 */
-                        downloadStatus = $("#newcontent-backup-status");
                         break;
                     case "T": /* Intro */
-                        downloadStatus = $("#status-backup-status");
                         break;
                     case "M": /* Diary */
-                        downloadStatus = $("#diary-backup-status");
+                        break;
+                    case "O": /* Share Diary */
                         break;
                     case "B": /* Blog */
-                        downloadStatus = $("#blog-backup-status");
                         break;
                     case "7": 
                         if(t) allPosts[baseIdx + index] = post;
@@ -238,7 +246,7 @@ function readCyPost(cnt, t) {
                                     return false;
                                 }
                                 
-                                if(post.type != "M")
+                                if(post.type != "M" && post.type != "O")
                                     post.title = $("#cyco-post-title", output)[0].innerText.trim();
                                 var content = "";
                                 var imageObj = $("section .cyco-imagelet figure img", output);
@@ -310,6 +318,8 @@ function initializeCy2me() {
     $(".profile dfn:first").html("");
     var diaryBtn = $("<span class='backup-btn'>").text("다이어리 백업").click(collectDiaries);
     var diaryStatus = $("<div id='diary-backup-status' class='backup-status'> <div class='lds-hourglass'></div><div class='backup-message'>done</div></span>");
+    var shareDiaryBtn = $("<span class='backup-btn'>").text("공유 다이어리 백업").click(collectShareDiaries);
+    var shareDiaryStatus = $("<div id='share-diary-backup-status' class='backup-status'> <div class='lds-hourglass'></div><div class='backup-message'>done</div></span>");
     var boardBtn = $("<span class='backup-btn'>").text("게시판 백업").click(collectBoards);
     var boardStatus = $("<div id='board-backup-status' class='backup-status'><div class='lds-hourglass'></div><div class='backup-message'>done</div></span>");
     var blogBtn = $("<span class='backup-btn'>").text("블로그 백업").click(collectBlogs);
@@ -323,6 +333,9 @@ function initializeCy2me() {
     
     $(".profile dfn:first").append(diaryBtn);
     $(".profile dfn:first").append(diaryStatus);
+    $(".profile dfn:first").append($("<em>"));
+    $(".profile dfn:first").append(shareDiaryBtn);
+    $(".profile dfn:first").append(shareDiaryStatus);
     $(".profile dfn:first").append($("<em>"));
     $(".profile dfn:first").append(boardBtn);
     $(".profile dfn:first").append(boardStatus);
