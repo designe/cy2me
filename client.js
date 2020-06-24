@@ -2,7 +2,7 @@ var last_id,last_dt,tag_value,startdate,enddate,forder_id,airepageno,airecase,ai
 var html = "";
 var type = 'more';
 var search = '';
-var allPosts = [];
+var allMap = {};
 var postIdx = 0;
 var activateReply = true;
 
@@ -36,6 +36,7 @@ function getBase64Image(img) {
 function printImageList() {
     var ret = "";
     var imageCount = 0;
+    var allPosts = Object.values(allMap);
     for(var i = 0 ; i < allPosts.length; i++) {
         if(allPosts[i].type != "2")
             continue;
@@ -65,12 +66,60 @@ function collectDiaries(comment=true) {
     $("#diary-backup-status .lds-hourglass").css("display", "inline-block");
     setTimeout(function() {
         readAllCyPosts("M");
+        var allPosts = Object.values(allMap);
         var file = new Blob([JSON.stringify(allPosts, null, 1)], {type: "text/plain;charset=utf-8"});
         saveAs("MyCyDiary_" + Date().replace(/\ /gi, "_").split("_GMT")[0] + ".txt", file);
         $("#diary-backup-status .lds-hourglass").css("display", "none");
         $("#diary-backup-status .backup-message").css("display", "inline-block");
     }, 300);
 }
+
+function collectShareDiaries(comment=true) {
+    activateReply = comment;
+    console.log("Start diary backup :)");
+    $("#share-diary-backup-status .backup-message").css("display", "none");
+    $("#share-diary-backup-status .lds-hourglass").css("display", "inline-block");
+    setTimeout(function() {
+        readAllCyPosts("O");
+
+        var tryCount = 1;
+        console.log("Start Feeds Backup!");
+        var intervalCtx = setInterval(function() {
+            var finishTrigger = true;
+            var successCnt = 0;
+            var failCnt = 0;
+            for(var key in allMap) {
+                var v = allMap[key];
+                if(v != {}) {
+                    if(v.isCompleted) {
+                        successCnt++;
+                        continue;
+                    } else {
+                        failCnt++;
+                        finishTrigger = false;
+                        connectCyPost(key, v);
+                    }
+                }
+            }
+            if(tryCount > 100) finishTrigger = true;
+            if(finishTrigger) {
+                console.log("Backup Finished.");
+                clearInterval(intervalCtx);
+                var allPosts = Object.values(allMap);
+                var file = new Blob([JSON.stringify(allPosts, null, 1)], {type: "text/plain;charset=utf-8"});
+                saveAs("MyCyShareDiary_" + Date().replace(/\ /gi, "_").split("_GMT")[0] + ".txt", file);
+                $("#share-diary-backup-status .lds-hourglass").css("display", "none");
+                $("#share-diary-backup-status .backup-message").css("display", "inline-block");
+            } else {
+                console.log(tryCount + "번째 컨텐츠 수집 결과");
+                console.log("총 " + (successCnt + failCnt) + "개 컨텐츠 중 " + successCnt + "개 성공하였습니다.");
+                console.log("실패한 " + failCnt + "개 컨텐츠에 대해 재수집 시도합니다.");
+            }
+            tryCount++;
+        }, 5000);
+    }, 300);
+}
+
 
 function collectBoards(comment=true) {
     activateReply = comment;
@@ -79,6 +128,7 @@ function collectBoards(comment=true) {
     $("#board-backup-status .lds-hourglass").css("display", "inline-block");
     setTimeout(function() {
         readAllCyPosts("1");
+        var allPosts = Object.values(allMap);
         var file = new Blob([JSON.stringify(allPosts, null, 1)], {type: "text/plain;charset=utf-8"});
         saveAs("MyCyBoards_" + Date().replace(/\ /gi, "_").split("_GMT")[0] + ".txt", file);
         $("#board-backup-status .lds-hourglass").css("display", "none");
@@ -93,6 +143,7 @@ function collectBlogs(comment=true) {
     $("#blog-backup-status .lds-hourglass").css("display", "inline-block");
     setTimeout(function() {
         readAllCyPosts("B");
+        var allPosts = Object.values(allMap);
         var file = new Blob([JSON.stringify(allPosts, null, 1)], {type: "text/plain;charset=utf-8"});
         saveAs("MyCyBlogs_" + Date().replace(/\ /gi, "_").split("_GMT")[0] + ".txt", file);
         $("#blog-backup-status .lds-hourglass").css("display", "none");
@@ -108,6 +159,7 @@ function collect2015(comment=true) {
     $("#newcontent-backup-status .lds-hourglass").css("display", "inline-block");
     setTimeout(function() {
         readAllCyPosts("P");
+        var allPosts = Object.values(allMap);
         var file = new Blob([JSON.stringify(allPosts, null, 1)], {type: "text/plain;charset=utf-8"});
         saveAs("MyCyNewContents_" + Date().replace(/\ /gi, "_").split("_GMT")[0] + ".txt", file);
         $("#newcontent-backup-status .lds-hourglass").css("display", "none");
@@ -122,6 +174,7 @@ function collectStatus(comment=true) {
     $("#status-backup-status .lds-hourglass").css("display", "inline-block");
     setTimeout(function() {
         readAllCyPosts("T");
+        var allPosts = Object.values(allMap);
         var file = new Blob([JSON.stringify(allPosts, null, 1)], {type: "text/plain;charset=utf-8"});
         saveAs("MyCyStatus_" + Date().replace(/\ /gi, "_").split("_GMT")[0] + ".txt", file);
         $("#status-backup-status .lds-hourglass").css("display", "none");
@@ -136,11 +189,78 @@ function collectPhotos(comment=true) {
     $("#photo-backup-status .lds-hourglass").css("display", "inline-block");
     setTimeout(function() {
         readAllCyPosts("2");
+        var allPosts = Object.values(allMap);
         var file = new Blob([JSON.stringify(allPosts, null, 1)], {type: "text/plain;charset=utf-8"});
         saveAs("MyCyPhotos_" + Date().replace(/\ /gi, "_").split("_GMT")[0] + ".txt", file);
         $("#photo-backup-status .lds-hourglass").css("display", "none");
         $("#photo-backup-status .backup-message").css("display", "inline-block");
     }, 300);
+}
+
+function connectCyPost(id, post) {
+    try {
+        $.ajax({
+            url: "/home/" + homeTid + "/post/"+ id + "/layer",
+            cache:false,
+            async:true,
+            dataType:'html',
+            data:{},
+            timeout:5000
+        }).done(function(viewResult) {
+            var output = $("<output>").append($.parseHTML(viewResult));
+            if(typeof $(".textData", output)[0] === 'undefined'){
+                return false;
+            }
+            
+            if(post.type != "M" && post.type != "O")
+                post.title = $("#cyco-post-title", output)[0].innerText.trim();
+            var content = "";
+            var imageObj = $("section .cyco-imagelet figure img", output);
+for(var i = 0; i < imageObj.length; i++)
+content += "<img src ='http://nthumb.cyworld.com/thumb?v=0&width=810&url=" + decodeURIComponent(imageObj[i].getAttribute("srctext")) + "'/>";
+var contentObj = $(".textData", output);
+            for(var i = 0; i < contentObj.length; i++)
+                content += contentObj[i].innerHTML.trim();
+            post.content = content;
+            post.date = $(".view1", output)[0].innerText.trim().split(" ")[0].split('\t').pop();
+            post.time = $(".view1", output)[0].innerText.trim().split(" ")[1];
+            post.isCompleted = true;
+            if(activateReply) {
+                var commentCount = post.commentCount;
+                if(commentCount != 0){
+                    $.ajax({
+                        url: "/home/" + homeTid + "/post/" + id + "/comment",
+                        dataType:'json',
+                        async:true,
+                        data: {},
+                    }).done(function(comments) {
+                        post.comments = [];
+                        for(comment_idx in comments.commentList) {
+                            var temp = comments.commentList[comment_idx].contentModel[0];
+                            temp.name = comments.commentList[comment_idx].writer.name;
+                            post.comments.push(temp);
+                        }
+                        allMap[id] = post;
+                    }).fail(function() {
+                        console.log(id + " | Failed | 댓글 수집에 실패하였습니다. 댓글을 제외한 컨텐츠만 저장됩니다.");
+
+                        allMap[id] = post;
+                    });
+                } else {
+                    allMap[id] = post;
+                }
+            } else {
+                allMap[id] = post;
+            }
+        }).fail(function(request, status ,error){
+            console.log(id + " | Failed | 컨텐츠 수집 시간이 초과되었습니다.");
+            post.isCompleted = false;
+            allMap[id] = post;
+        });
+    }
+    catch(e) {
+        console.error(e);
+    }
 }
 
 function readAllCyPosts(t) {
@@ -158,7 +278,7 @@ function readAllCyPosts(t) {
         readCyPost(totalCount - postIdx, t);
         postIdx += 30;
     } while (totalCount - postIdx > 0);
-    console.log("Finish");
+    console.log("Analyzation Finishd.");
 }
 
 function readCyPost(cnt, t) {
@@ -193,97 +313,41 @@ function readCyPost(cnt, t) {
                     if(t && value.serviceType != t)
                         return false;
                     
+                    allMap[value.identity] = {};
+
                     var post = {
                         "type" : value.serviceType,
                         "writer" : value.writer,
                         "viewCount" : value.viewCount,
+                        "commentCount" : value.commentCount
                     };
                     
-                    var downloadStatus;
                     switch(post.type) {
                     case "2": /* include images */
                         post.image = value.summaryModel.image;
-                        downloadStatus = $("#photo-backup-status");
                         break;
                     case "1": /* Board */
-                        downloadStatus = $("#board-backup-status");
                         break;
                     case "P": /* 2015 */
-                        downloadStatus = $("#newcontent-backup-status");
                         break;
                     case "T": /* Intro */
-                        downloadStatus = $("#status-backup-status");
                         break;
                     case "M": /* Diary */
-                        downloadStatus = $("#diary-backup-status");
+                        break;
+                    case "O": /* Share Diary */
                         break;
                     case "B": /* Blog */
-                        downloadStatus = $("#blog-backup-status");
                         break;
                     case "7": 
-                        if(t) allPosts[baseIdx + index] = post;
-                        else allPosts.push(post);
+                        //if(t) allPosts[baseIdx + index] = post;
+                        //else allPosts.push(post);
                         return false;
                     }
-                    try {
-                        $.ajax({
-                            url: "/home/" + homeTid + "/post/"+ value.identity + "/layer",
-                            cache:false,
-                            async:false,
-                            dataType:'html',
-                            data:{},
-                            success:function(viewResult, status, xhr) {
-                                var output = $("<output>").append($.parseHTML(viewResult));
-                                if(typeof $(".textData", output)[0] === 'undefined'){
-                                    return false;
-                                }
-                                
-                                if(post.type != "M")
-                                    post.title = $("#cyco-post-title", output)[0].innerText.trim();
-                                var content = "";
-                                var imageObj = $("section .cyco-imagelet figure img", output);
-				for(var i = 0; i < imageObj.length; i++)
-				    content += "<img src ='http://nthumb.cyworld.com/thumb?v=0&width=810&url=" + decodeURIComponent(imageObj[i].getAttribute("srctext")) + "'/>";
-				var contentObj = $(".textData", output);
-                                for(var i = 0; i < contentObj.length; i++)
-                                    content += contentObj[i].innerHTML.trim();
-                                post.content = content;
-                                post.date = $(".view1", output)[0].innerText.trim().split(" ")[0].split('\t').pop();
-                                post.time = $(".view1", output)[0].innerText.trim().split(" ")[1];
+                    
+                    connectCyPost(value.identity, post);
 
-                                if(activateReply) {
-                                    var commentCount = value.commentCount;
-                                    if(commentCount != 0){
-                                        $.ajax({
-                                            url: "/home/" + homeTid + "/post/" + value.identity + "/comment",
-                                            dataType:'json',
-                                            async:false,
-                                            data: {},
-                                            success: function(comments, status, xhr) {
-                                                post.comments = [];
-                                                for(comment_idx in comments.commentList) {
-                                                    var temp = comments.commentList[comment_idx].contentModel[0];
-                                                    temp.name = comments.commentList[comment_idx].writer.name;
-                                                    post.comments.push(temp);
-                                                }
-                                                allPosts.push(post); 
-                                            }
-                                        });
-                                    } else {
-                                        allPosts.push(post); 
-                                    }
-                                } else {
-                                    allPosts.push(post); 
-                                }
-                            }
-                        });
-                    }
-                    catch(e) {
-                        console.error(e);
-                    }
                     var cal = ((baseIdx + index) / ret ) * 100;
-                    //downloadStatus.text(cal.toFixed(2) + "% [" + (baseIdx + index) + " / " + ret + "] " );
-                    console.log("Collecting | " + value.identity + " | " + cal.toFixed(2) + "% [" + (baseIdx + index) + " / " + ret + "] " );
+                    console.log("Analyzing Feed | " + value.identity + " | " + cal.toFixed(2) + "% [" + (baseIdx + index) + " / " + ret + "] " );
                 });
             }else {
                 ret = 0;
@@ -307,6 +371,8 @@ function initializeCy2me() {
     $(".profile dfn:first").html("");
     var diaryBtn = $("<span class='backup-btn'>").text("다이어리 백업").click(collectDiaries);
     var diaryStatus = $("<div id='diary-backup-status' class='backup-status'> <div class='lds-hourglass'></div><div class='backup-message'>done</div></span>");
+    var shareDiaryBtn = $("<span class='backup-btn'>").text("공유 다이어리 백업").click(collectShareDiaries);
+    var shareDiaryStatus = $("<div id='share-diary-backup-status' class='backup-status'> <div class='lds-hourglass'></div><div class='backup-message'>done</div></span>");
     var boardBtn = $("<span class='backup-btn'>").text("게시판 백업").click(collectBoards);
     var boardStatus = $("<div id='board-backup-status' class='backup-status'><div class='lds-hourglass'></div><div class='backup-message'>done</div></span>");
     var blogBtn = $("<span class='backup-btn'>").text("블로그 백업").click(collectBlogs);
@@ -320,6 +386,9 @@ function initializeCy2me() {
     
     $(".profile dfn:first").append(diaryBtn);
     $(".profile dfn:first").append(diaryStatus);
+    $(".profile dfn:first").append($("<em>"));
+    $(".profile dfn:first").append(shareDiaryBtn);
+    $(".profile dfn:first").append(shareDiaryStatus);
     $(".profile dfn:first").append($("<em>"));
     $(".profile dfn:first").append(boardBtn);
     $(".profile dfn:first").append(boardStatus);
