@@ -91,6 +91,7 @@ function collectFeeds(t, comment=true) {
             var successCnt = 0;
             var failCnt = 0;
             var startCnt = 0;
+            var noStartCnt = 0;
             
             for(var key in allMap) {
                 var v = allMap[key];
@@ -103,23 +104,21 @@ function collectFeeds(t, comment=true) {
                         } else {
                             failCnt++;
                             finishTrigger = false;
-                            //connectCyPost(key, v);
                         }
+                    } else {
+                        noStartCnt++;
                     }
                 }
             }
 
             if(totalFeedCount == startCnt) {
-                for(var key in allMap) {
-                    var v = allMap[key];
-                    if(v != {}) {
-                        if(v.isCompleted) {
-                            continue;
-                        } else {
-                            connectCyPost(key, v, 10000);
-                        }
+                Object.values(allMap).some(function(v, i) {
+                    if(v.isCompleted) {
+                        return;
+                    } else {
+                        connectCyPost(v.id, v, 8000);
                     }
-                }
+                });
                 tryCount++;
             } else {
                 finishTrigger = false;
@@ -127,14 +126,14 @@ function collectFeeds(t, comment=true) {
 
             if(tryCount > 10) finishTrigger = true;
             var hitCal = (successCnt / totalFeedCount) * 100.0;
-            console.log("Collecting Feed | " + (Date.now() - backupStartTime) + "ms | eval " + tryCount + " startCnt = " + startCnt + " successCnt = " + successCnt + " failCnt = " + failCnt + " | " + hitCal.toFixed(2) + "% [" + successCnt + " / " + totalFeedCount + "] " );
+            console.log("Collecting Feed | " + (Date.now() - backupStartTime) + "ms | Eval " + tryCount + " startCnt = " + startCnt + " noStartCnt = " + noStartCnt + " successCnt = " + successCnt + " failCnt = " + failCnt + " | " + hitCal.toFixed(2) + "% [" + successCnt + " / " + totalFeedCount + "] " );
             if(finishTrigger) {
+                clearInterval(intervalCtx);
                 console.log("CY2ME | Backup is going to be finished after 15 seconds. | Thank you");
                 setTimeout(function() {
                     var backupTime = Date.now() - backupStartTime;
                     console.log("총 " + (backupTime / 1000.0) + "초 동안 백업이 진행되었습니다.");
                     console.log("Backup Finished.");
-                    clearInterval(intervalCtx);
                     var allPosts = Object.values(allMap);
                     var file = new Blob([JSON.stringify(allPosts, null, 1)], {type: "text/plain;charset=utf-8"});
                     saveAs("MyCy" + typeFeed.title +"_" + Date().replace(/\ /gi, "_").split("_GMT")[0] + ".txt", file);
@@ -154,8 +153,9 @@ function collectPhotos(comment=true) { collectFeeds("2", comment); }
 function collect2015(comment=true) { collectFeeds("P", comment); }
 function collectStatus(comment=true) { collectFeeds("T", comment); }
 
+var connectCyPostCnt = 0;
 function connectCyPost(id, post, time=0) {
-    post.isStarted = false;
+    
     try {
         var ajaxOption = {
             url: "/home/" + homeTid + "/post/"+ id + "/layer",
@@ -165,15 +165,17 @@ function connectCyPost(id, post, time=0) {
             data:{},
             beforeSend: function() {
                 post.isStarted = true;
-            }
+            } 
         };
         
         if(time != 0)
-            ajaxOption.timeOut = time;
+            ajaxOption["timeout"] = time;
         
         $.ajax(ajaxOption).done(function(viewResult) {
             var output = $("<output>").append($.parseHTML(viewResult));
             if(typeof $(".textData", output)[0] === 'undefined'){
+                post.isCompleted = false;
+                allMap[id] = post;
                 return false;
             }
             
@@ -208,7 +210,6 @@ var contentObj = $(".textData", output);
                         allMap[id] = post;
                     }).fail(function() {
                         console.log(id + " | Failed | 댓글 수집에 실패하였습니다. 댓글을 제외한 컨텐츠만 저장됩니다.");
-
                         allMap[id] = post;
                     });
                 } else {
@@ -221,16 +222,19 @@ var contentObj = $(".textData", output);
             //console.log(id + " | Failed | 컨텐츠 수집 시간이 초과되었습니다.");
             post.isCompleted = false;
             allMap[id] = post;
+            //allMap[id] = post;
         });
     }
     catch(e) {
-        //console.error(e);
+        console.error(e);
+        console.log("try catch error : " + e);
+        //allMap[id] = post;
     }
 }
 
 function readAllCyPosts(t) {
     // initialize global variables
-    allPosts = [];
+    allMap = {};
     postIdx = 0;
     last_dt = null;
     var totalCount = readCyPost(30, t);
@@ -278,15 +282,16 @@ function readCyPost(cnt, t) {
                     if(t && value.serviceType != t)
                         return false;
                     
-                    allMap[value.identity] = {};
-
                     var post = {
+                        "id" : value.identity,
                         "type" : value.serviceType,
                         "writer" : value.writer,
                         "viewCount" : value.viewCount,
                         "commentCount" : value.commentCount,
                         "isStarted" : false
                     };
+
+                    allMap[value.identity] = post;
                     
                     switch(post.type) {
                     case "2": /* include images */
@@ -309,8 +314,8 @@ function readCyPost(cnt, t) {
                         //else allPosts.push(post);
                         return false;
                     }
-                    
-                    connectCyPost(value.identity, post);
+
+                    connectCyPost(value.identity, JSON.parse(JSON.stringify(post)));
 
                     var cal = ((baseIdx + index) / ret ) * 100;
                     console.log("Analyzing Feed | " + value.identity + " | " + cal.toFixed(2) + "% [" + (baseIdx + index) + " / " + ret + "] " );
