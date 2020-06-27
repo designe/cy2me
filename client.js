@@ -20,6 +20,18 @@ else{
     home_idx = 0;
 }
 
+var backupStartTime = 0;
+var backupEndTime = 0;
+
+var CY2ME_CATEGORY_INFO = {
+    "M": {'type': "M", 'title': "Diary", 'backup_status': "#diary-backup-status" },
+    "O": {'type': "O", 'title': "ShareDiary", 'backup_status': "#share-diary-backup-status" },
+    "1": {'type': "1",'title': "Board",'backup_status': "#board-backup-status" },
+    "2": {'type': "2", 'title': "Photo",'backup_status': "#photo-backup-status" },
+    "B": {'type': "B", 'title': "Blog", 'backup_status': "#blog-backup-status" },
+    "P": {'type': "P", 'title': "After2015", 'backup_status': "#newcontent-backup-status" },
+    "T": {'type': "T", 'title': "Status",'backup_status': "#status-backup-status" }
+};
 
 function getBase64Image(img) {
     var canvas = document.createElement("canvas");
@@ -59,334 +71,88 @@ function saveAs(filename, file) {
     }, 0); 
 }
 
-function collectDiaries(comment=true) {
-    activateReply = comment;
-    console.log("Start diary backup :)");
-    $("#diary-backup-status .backup-message").css("display", "none");
-    $("#diary-backup-status .lds-hourglass").css("display", "inline-block");
-    setTimeout(function() {
-        readAllCyPosts("M");
+function collectFeeds(t, comment=true) {
+    backupStartTime = Date.now();
+    var typeFeed = CY2ME_CATEGORY_INFO[t];
 
-        var tryCount = 1;
+    activateReply = comment;
+    console.log("Start " + typeFeed.title + " backup :)");
+    $(typeFeed.backup_status + " .backup-message").css("display", "none");
+    $(typeFeed.backup_status + " .lds-hourglass").css("display", "inline-block");
+    setTimeout(function() {
+        readAllCyPosts(t);
+
+        var tryCount = 0;
+        var totalFeedCount = Object.values(allMap).length;
+        console.log("All " + typeFeed.title + " Feeds Count : " + totalFeedCount);
         console.log("Start Feeds Backup!");
         var intervalCtx = setInterval(function() {
             var finishTrigger = true;
             var successCnt = 0;
             var failCnt = 0;
+            var startCnt = 0;
+            
             for(var key in allMap) {
                 var v = allMap[key];
                 if(v != {}) {
-                    if(v.isCompleted) {
-                        successCnt++;
-                        continue;
-                    } else {
-                        failCnt++;
-                        finishTrigger = false;
-                        connectCyPost(key, v);
+                    if(v.isStarted){
+                        startCnt++;
+                        if(v.isCompleted) {
+                            successCnt++;
+                            continue;
+                        } else {
+                            failCnt++;
+                            finishTrigger = false;
+                            //connectCyPost(key, v);
+                        }
                     }
                 }
             }
+
+            if(totalFeedCount == startCnt) {
+                for(var key in allMap) {
+                    var v = allMap[key];
+                    if(v != {}) {
+                        if(v.isCompleted) {
+                            continue;
+                        } else {
+                            connectCyPost(key, v);
+                        }
+                    }
+                }
+                tryCount++;
+            } else {
+                finishTrigger = false;
+            }
+
             if(tryCount > 10) finishTrigger = true;
+            var hitCal = (successCnt / totalFeedCount) * 100.0;
+            console.log("Collecting Feed | " + Date.now() - backupStartTime + "ms | eval " + tryCount + " startCnt = " + startCnt + " successCnt = " + successCnt + " failCnt = " + failCnt + " | " + hitCal.toFixed(2) + "% [" + successCnt + " / " + totalFeedCount + "] " );
             if(finishTrigger) {
+                var backupTime = Date.now() - backupStartTime;
+                console.log("총 " + (backupTime / 1000.0) + "초 동안 백업이 진행되었습니다.");
                 console.log("Backup Finished.");
                 clearInterval(intervalCtx);
                 var allPosts = Object.values(allMap);
                 var file = new Blob([JSON.stringify(allPosts, null, 1)], {type: "text/plain;charset=utf-8"});
-                saveAs("MyCyDiary_" + Date().replace(/\ /gi, "_").split("_GMT")[0] + ".txt", file);
-                $("#diary-backup-status .lds-hourglass").css("display", "none");
-                $("#diary-backup-status .backup-message").css("display", "inline-block");
-            } else {
-                console.log(tryCount + "번째 컨텐츠 수집 결과");
-                console.log("총 " + (successCnt + failCnt) + "개 컨텐츠 중 " + successCnt + "개 성공하였습니다.");
-                console.log("실패한 " + failCnt + "개 컨텐츠에 대해 재수집 시도합니다.");
+                saveAs("MyCy" + typeFeed.title +"_" + Date().replace(/\ /gi, "_").split("_GMT")[0] + ".txt", file);
+                $(typeFeed.backup_status + " .lds-hourglass").css("display", "none");
+                $(typeFeed.backup_status + " .backup-message").css("display", "inline-block");
             }
-            tryCount++;
-        }, 60000);
-        
+        }, 10000);
     }, 300);
 }
 
-function collectShareDiaries(comment=true) {
-    activateReply = comment;
-    console.log("Start diary backup :)");
-    $("#share-diary-backup-status .backup-message").css("display", "none");
-    $("#share-diary-backup-status .lds-hourglass").css("display", "inline-block");
-    setTimeout(function() {
-        readAllCyPosts("O");
-
-        var tryCount = 1;
-        console.log("Start Feeds Backup!");
-        var intervalCtx = setInterval(function() {
-            var finishTrigger = true;
-            var successCnt = 0;
-            var failCnt = 0;
-            for(var key in allMap) {
-                var v = allMap[key];
-                if(v != {}) {
-                    if(v.isCompleted) {
-                        successCnt++;
-                        continue;
-                    } else {
-                        failCnt++;
-                        finishTrigger = false;
-                        connectCyPost(key, v);
-                    }
-                }
-            }
-            if(tryCount > 100) finishTrigger = true;
-            if(finishTrigger) {
-                console.log("Backup Finished.");
-                clearInterval(intervalCtx);
-                var allPosts = Object.values(allMap);
-                var file = new Blob([JSON.stringify(allPosts, null, 1)], {type: "text/plain;charset=utf-8"});
-                saveAs("MyCyShareDiary_" + Date().replace(/\ /gi, "_").split("_GMT")[0] + ".txt", file);
-                $("#share-diary-backup-status .lds-hourglass").css("display", "none");
-                $("#share-diary-backup-status .backup-message").css("display", "inline-block");
-            } else {
-                console.log(tryCount + "번째 컨텐츠 수집 결과");
-                console.log("총 " + (successCnt + failCnt) + "개 컨텐츠 중 " + successCnt + "개 성공하였습니다.");
-                console.log("실패한 " + failCnt + "개 컨텐츠에 대해 재수집 시도합니다.");
-            }
-            tryCount++;
-        }, 5000);
-    }, 300);
-}
-
-
-function collectBoards(comment=true) {
-    activateReply = comment;
-    console.log("Start board backup :)");
-    $("#board-backup-status .backup-message").css("display", "none");
-    $("#board-backup-status .lds-hourglass").css("display", "inline-block");
-    setTimeout(function() {
-        readAllCyPosts("1");
-
-        var tryCount = 1;
-        console.log("Start Feeds Backup!");
-        var intervalCtx = setInterval(function() {
-            var finishTrigger = true;
-            var successCnt = 0;
-            var failCnt = 0;
-            for(var key in allMap) {
-                var v = allMap[key];
-                if(v != {}) {
-                    if(v.isCompleted) {
-                        successCnt++;
-                        continue;
-                    } else {
-                        failCnt++;
-                        finishTrigger = false;
-                        connectCyPost(key, v);
-                    }
-                }
-            }
-            if(tryCount > 100) finishTrigger = true;
-            if(finishTrigger) {
-                console.log("Backup Finished.");
-                clearInterval(intervalCtx);
-                var allPosts = Object.values(allMap);
-                var file = new Blob([JSON.stringify(allPosts, null, 1)], {type: "text/plain;charset=utf-8"});
-                saveAs("MyCyBoards_" + Date().replace(/\ /gi, "_").split("_GMT")[0] + ".txt", file);
-                $("#board-backup-status .lds-hourglass").css("display", "none");
-                $("#board-backup-status .backup-message").css("display", "inline-block");
-            } else {
-                console.log(tryCount + "번째 컨텐츠 수집 결과");
-                console.log("총 " + (successCnt + failCnt) + "개 컨텐츠 중 " + successCnt + "개 성공하였습니다.");
-                console.log("실패한 " + failCnt + "개 컨텐츠에 대해 재수집 시도합니다.");
-            }
-            tryCount++;
-        }, 5000);
-
-    }, 300);
-}
-
-function collectBlogs(comment=true) {
-    activateReply = comment;
-    console.log("Start blog backup :)");
-    $("#blog-backup-status .backup-message").css("display", "none");
-    $("#blog-backup-status .lds-hourglass").css("display", "inline-block");
-    setTimeout(function() {
-        readAllCyPosts("B");
-
-        var tryCount = 1;
-        console.log("Start Feeds Backup!");
-        var intervalCtx = setInterval(function() {
-            var finishTrigger = true;
-            var successCnt = 0;
-            var failCnt = 0;
-            for(var key in allMap) {
-                var v = allMap[key];
-                if(v != {}) {
-                    if(v.isCompleted) {
-                        successCnt++;
-                        continue;
-                    } else {
-                        failCnt++;
-                        finishTrigger = false;
-                        connectCyPost(key, v);
-                    }
-                }
-            }
-            if(tryCount > 100) finishTrigger = true;
-            if(finishTrigger) {
-                console.log("Backup Finished.");
-                clearInterval(intervalCtx);
-                var allPosts = Object.values(allMap);
-                var file = new Blob([JSON.stringify(allPosts, null, 1)], {type: "text/plain;charset=utf-8"});
-                saveAs("MyCyBlogs_" + Date().replace(/\ /gi, "_").split("_GMT")[0] + ".txt", file);
-                $("#blog-backup-status .lds-hourglass").css("display", "none");
-                $("#blog-backup-status .backup-message").css("display", "inline-block");
-            } else {
-                console.log(tryCount + "번째 컨텐츠 수집 결과");
-                console.log("총 " + (successCnt + failCnt) + "개 컨텐츠 중 " + successCnt + "개 성공하였습니다.");
-                console.log("실패한 " + failCnt + "개 컨텐츠에 대해 재수집 시도합니다.");
-            }
-            tryCount++;
-        }, 5000);
-    }, 300);
-}
-
-
-function collect2015(comment=true) {
-    activateReply = comment;
-    console.log("Start new content backup :)");
-    $("#newcontent-backup-status .backup-message").css("display", "none");
-    $("#newcontent-backup-status .lds-hourglass").css("display", "inline-block");
-    setTimeout(function() {
-        readAllCyPosts("P");
-
-        var tryCount = 1;
-        console.log("Start Feeds Backup!");
-        var intervalCtx = setInterval(function() {
-            var finishTrigger = true;
-            var successCnt = 0;
-            var failCnt = 0;
-            for(var key in allMap) {
-                var v = allMap[key];
-                if(v != {}) {
-                    if(v.isCompleted) {
-                        successCnt++;
-                        continue;
-                    } else {
-                        failCnt++;
-                        finishTrigger = false;
-                        connectCyPost(key, v);
-                    }
-                }
-            }
-            if(tryCount > 100) finishTrigger = true;
-            if(finishTrigger) {
-                console.log("Backup Finished.");
-                clearInterval(intervalCtx);
-                var allPosts = Object.values(allMap);
-                var file = new Blob([JSON.stringify(allPosts, null, 1)], {type: "text/plain;charset=utf-8"});
-                saveAs("MyCyNewContents_" + Date().replace(/\ /gi, "_").split("_GMT")[0] + ".txt", file);
-                $("#newcontent-backup-status .lds-hourglass").css("display", "none");
-                $("#newcontent-backup-status .backup-message").css("display", "inline-block");
-            } else {
-                console.log(tryCount + "번째 컨텐츠 수집 결과");
-                console.log("총 " + (successCnt + failCnt) + "개 컨텐츠 중 " + successCnt + "개 성공하였습니다.");
-                console.log("실패한 " + failCnt + "개 컨텐츠에 대해 재수집 시도합니다.");
-            }
-            tryCount++;
-        }, 5000);
-    }, 300);
-}
-
-function collectStatus(comment=true) {
-    activateReply = comment;
-    console.log("Start status backup :)");
-    $("#status-backup-status .backup-message").css("display", "none");
-    $("#status-backup-status .lds-hourglass").css("display", "inline-block");
-    setTimeout(function() {
-        readAllCyPosts("T");
-
-        var tryCount = 1;
-        console.log("Start Feeds Backup!");
-        var intervalCtx = setInterval(function() {
-            var finishTrigger = true;
-            var successCnt = 0;
-            var failCnt = 0;
-            for(var key in allMap) {
-                var v = allMap[key];
-                if(v != {}) {
-                    if(v.isCompleted) {
-                        successCnt++;
-                        continue;
-                    } else {
-                        failCnt++;
-                        finishTrigger = false;
-                        connectCyPost(key, v);
-                    }
-                }
-            }
-            if(tryCount > 100) finishTrigger = true;
-            if(finishTrigger) {
-                console.log("Backup Finished.");
-                clearInterval(intervalCtx);
-                var allPosts = Object.values(allMap);
-                var file = new Blob([JSON.stringify(allPosts, null, 1)], {type: "text/plain;charset=utf-8"});
-                saveAs("MyCyStatus_" + Date().replace(/\ /gi, "_").split("_GMT")[0] + ".txt", file);
-                $("#status-backup-status .lds-hourglass").css("display", "none");
-                $("#status-backup-status .backup-message").css("display", "inline-block");
-            } else {
-                console.log(tryCount + "번째 컨텐츠 수집 결과");
-                console.log("총 " + (successCnt + failCnt) + "개 컨텐츠 중 " + successCnt + "개 성공하였습니다.");
-                console.log("실패한 " + failCnt + "개 컨텐츠에 대해 재수집 시도합니다.");
-            }
-            tryCount++;
-        }, 5000);
-
-    }, 300);
-}
-
-function collectPhotos(comment=true) {
-    activateReply = comment;
-    console.log("Start photo backup :)");
-    $("#photo-backup-status .backup-message").css("display", "none");
-    $("#photo-backup-status .lds-hourglass").css("display", "inline-block");
-    setTimeout(function() {
-        readAllCyPosts("2");
-
-        var tryCount = 1;
-        console.log("Start Feeds Backup!");
-        var intervalCtx = setInterval(function() {
-            var finishTrigger = true;
-            var successCnt = 0;
-            var failCnt = 0;
-            for(var key in allMap) {
-                var v = allMap[key];
-                if(v != {}) {
-                    if(v.isCompleted) {
-                        successCnt++;
-                        continue;
-                    } else {
-                        failCnt++;
-                        finishTrigger = false;
-                        connectCyPost(key, v);
-                    }
-                }
-            }
-            if(tryCount > 10) finishTrigger = true;
-            if(finishTrigger) {
-                console.log("Backup Finished.");
-                clearInterval(intervalCtx);
-                var allPosts = Object.values(allMap);
-                var file = new Blob([JSON.stringify(allPosts, null, 1)], {type: "text/plain;charset=utf-8"});
-                saveAs("MyCyPhotos_" + Date().replace(/\ /gi, "_").split("_GMT")[0] + ".txt", file);
-                $("#photo-backup-status .lds-hourglass").css("display", "none");
-                $("#photo-backup-status .backup-message").css("display", "inline-block"); 
-            } else {
-                console.log(tryCount + "번째 컨텐츠 수집 결과");
-                console.log("총 " + (successCnt + failCnt) + "개 컨텐츠 중 " + successCnt + "개 성공하였습니다.");
-                console.log("실패한 " + failCnt + "개 컨텐츠에 대해 재수집 시도합니다.");
-            }
-            tryCount++;
-        }, 5000);
-    }, 300);
-}
+function collectShareDiaries(comment=true) { collectFeeds("O", comment); }
+function collectBoards(comment=true) { collectFeeds("1", comment); }
+function collectBlogs(comment=true) { collectFeeds("B", comment); }
+function collectDiaries(comment=true) { collectFeeds("M", comment); }
+function collectPhotos(comment=true) { collectFeeds("2", comment); }
+function collect2015(comment=true) { collectFeeds("P", comment); }
+function collectStatus(comment=true) { collectFeeds("T", comment); }
 
 function connectCyPost(id, post) {
+    post.isStarted = false;
     try {
         $.ajax({
             url: "/home/" + homeTid + "/post/"+ id + "/layer",
@@ -394,7 +160,9 @@ function connectCyPost(id, post) {
             async:true,
             dataType:'html',
             data:{},
-            timeout:60000
+            beforeSend: function() {
+                post.isStarted = true;
+            }
         }).done(function(viewResult) {
             var output = $("<output>").append($.parseHTML(viewResult));
             if(typeof $(".textData", output)[0] === 'undefined'){
@@ -442,13 +210,13 @@ var contentObj = $(".textData", output);
                 allMap[id] = post;
             }
         }).fail(function(request, status ,error){
-            console.log(id + " | Failed | 컨텐츠 수집 시간이 초과되었습니다.");
+            //console.log(id + " | Failed | 컨텐츠 수집 시간이 초과되었습니다.");
             post.isCompleted = false;
             allMap[id] = post;
         });
     }
     catch(e) {
-        console.error(e);
+        //console.error(e);
     }
 }
 
@@ -508,7 +276,8 @@ function readCyPost(cnt, t) {
                         "type" : value.serviceType,
                         "writer" : value.writer,
                         "viewCount" : value.viewCount,
-                        "commentCount" : value.commentCount
+                        "commentCount" : value.commentCount,
+                        "isStarted" : false
                     };
                     
                     switch(post.type) {
@@ -593,8 +362,8 @@ function initializeCy2me() {
     $(".profile dfn:first").append($("<em>"));
     $(".profile dfn:first").append(statusBtn);
     $(".profile dfn:first").append(statusStatus);
+
+    console.log("CY2ME : Cyworld 백업 준비 완료 | 웹페이지에 보시면 백업 메뉴가 활성화되어 있습니다.");
 }
 
 initializeCy2me();
-console.log("CY2ME : Cyworld 백업 준비 완료 :)");
-
