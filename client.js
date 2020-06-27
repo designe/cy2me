@@ -116,7 +116,7 @@ function collectFeeds(t, comment=true) {
                         if(v.isCompleted) {
                             continue;
                         } else {
-                            connectCyPost(key, v);
+                            connectCyPost(key, v, 10000);
                         }
                     }
                 }
@@ -129,15 +129,18 @@ function collectFeeds(t, comment=true) {
             var hitCal = (successCnt / totalFeedCount) * 100.0;
             console.log("Collecting Feed | " + (Date.now() - backupStartTime) + "ms | eval " + tryCount + " startCnt = " + startCnt + " successCnt = " + successCnt + " failCnt = " + failCnt + " | " + hitCal.toFixed(2) + "% [" + successCnt + " / " + totalFeedCount + "] " );
             if(finishTrigger) {
-                var backupTime = Date.now() - backupStartTime;
-                console.log("총 " + (backupTime / 1000.0) + "초 동안 백업이 진행되었습니다.");
-                console.log("Backup Finished.");
-                clearInterval(intervalCtx);
-                var allPosts = Object.values(allMap);
-                var file = new Blob([JSON.stringify(allPosts, null, 1)], {type: "text/plain;charset=utf-8"});
-                saveAs("MyCy" + typeFeed.title +"_" + Date().replace(/\ /gi, "_").split("_GMT")[0] + ".txt", file);
-                $(typeFeed.backup_status + " .lds-hourglass").css("display", "none");
-                $(typeFeed.backup_status + " .backup-message").css("display", "inline-block");
+                console.log("CY2ME | Backup is going to be finished after 15 seconds. | Thank you");
+                setTimeout(function() {
+                    var backupTime = Date.now() - backupStartTime;
+                    console.log("총 " + (backupTime / 1000.0) + "초 동안 백업이 진행되었습니다.");
+                    console.log("Backup Finished.");
+                    clearInterval(intervalCtx);
+                    var allPosts = Object.values(allMap);
+                    var file = new Blob([JSON.stringify(allPosts, null, 1)], {type: "text/plain;charset=utf-8"});
+                    saveAs("MyCy" + typeFeed.title +"_" + Date().replace(/\ /gi, "_").split("_GMT")[0] + ".txt", file);
+                    $(typeFeed.backup_status + " .lds-hourglass").css("display", "none");
+                    $(typeFeed.backup_status + " .backup-message").css("display", "inline-block");
+                }, 15000);
             }
         }, 10000);
     }, 300);
@@ -151,10 +154,10 @@ function collectPhotos(comment=true) { collectFeeds("2", comment); }
 function collect2015(comment=true) { collectFeeds("P", comment); }
 function collectStatus(comment=true) { collectFeeds("T", comment); }
 
-function connectCyPost(id, post) {
+function connectCyPost(id, post, time=0) {
     post.isStarted = false;
     try {
-        $.ajax({
+        var ajaxOption = {
             url: "/home/" + homeTid + "/post/"+ id + "/layer",
             cache:false,
             async:true,
@@ -163,7 +166,12 @@ function connectCyPost(id, post) {
             beforeSend: function() {
                 post.isStarted = true;
             }
-        }).done(function(viewResult) {
+        };
+        
+        if(time != 0)
+            ajaxOption.timeOut = time;
+        
+        $.ajax(ajaxOption).done(function(viewResult) {
             var output = $("<output>").append($.parseHTML(viewResult));
             if(typeof $(".textData", output)[0] === 'undefined'){
                 return false;
