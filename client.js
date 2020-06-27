@@ -127,7 +127,7 @@ function collectFeeds(t, comment=true) {
 
             if(tryCount > 10) finishTrigger = true;
             var hitCal = (successCnt / totalFeedCount) * 100.0;
-            console.log("Collecting Feed | " + Date.now() - backupStartTime + "ms | eval " + tryCount + " startCnt = " + startCnt + " successCnt = " + successCnt + " failCnt = " + failCnt + " | " + hitCal.toFixed(2) + "% [" + successCnt + " / " + totalFeedCount + "] " );
+            console.log("Collecting Feed | " + (Date.now() - backupStartTime) + "ms | eval " + tryCount + " startCnt = " + startCnt + " successCnt = " + successCnt + " failCnt = " + failCnt + " | " + hitCal.toFixed(2) + "% [" + successCnt + " / " + totalFeedCount + "] " );
             if(finishTrigger) {
                 var backupTime = Date.now() - backupStartTime;
                 console.log("총 " + (backupTime / 1000.0) + "초 동안 백업이 진행되었습니다.");
