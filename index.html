@@ -176,6 +176,12 @@
           
           for(var i = 0; i < _json.length; i++) {
               var idx = i;
+
+              if(typeof _json[idx].isCompleted !== 'undefined') {
+                if(_json[idx].isCompleted != true)
+                    continue;
+              }
+              
               if(_order == false) {
                 idx = _json.length - (1 + i);
               }
@@ -183,6 +189,7 @@
               var post = $("<div class='post'>");
               switch(_json[idx].type){
               case "M":
+              case "O":
                   post = $("<div class='post M'>");
                   break;
               case "B":
