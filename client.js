@@ -230,6 +230,9 @@ var contentObj = $(".textData", output);
                         for(comment_idx in comments.commentList) {
                             var temp = comments.commentList[comment_idx].contentModel[0];
                             temp.name = comments.commentList[comment_idx].writer.name;
+                            if(typeof temp.name === 'undefined'){
+                                temp.name = comments.commentList[comment_idx].writer.nickname;
+                            }
                             post.comments.push(temp);
                         }
                         allMap[id] = post;
