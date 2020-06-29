@@ -79,12 +79,18 @@ function collectFeeds(t, comment=true) {
     console.log("Start " + typeFeed.title + " backup :)");
     $(typeFeed.backup_status + " .backup-message").css("display", "none");
     $(typeFeed.backup_status + " .lds-hourglass").css("display", "inline-block");
+
     setTimeout(function() {
         readAllCyPosts(t);
 
+        var totalFeeds = Object.entries(allMap);
+        var totalFeedsCount = totalFeeds.length;
+        var startIdx = 0;
+        var endIdx = 30;
+
         var tryCount = 0;
-        var totalFeedCount = Object.values(allMap).length;
-        console.log("All " + typeFeed.title + " Feeds Count : " + totalFeedCount);
+        
+        console.log("All " + typeFeed.title + " Feeds Count : " + totalFeedsCount);
         console.log("Start Feeds Backup!");
         var intervalCtx = setInterval(function() {
             var finishTrigger = true;
@@ -92,7 +98,7 @@ function collectFeeds(t, comment=true) {
             var failCnt = 0;
             var startCnt = 0;
             var noStartCnt = 0;
-            
+
             for(var key in allMap) {
                 var v = allMap[key];
                 if(v != {}) {
@@ -106,27 +112,46 @@ function collectFeeds(t, comment=true) {
                             finishTrigger = false;
                         }
                     } else {
+                        finishTrigger = false;
                         noStartCnt++;
                     }
+                } else {
+                    finishTrigger = false;
                 }
             }
 
-            if(totalFeedCount == startCnt) {
-                Object.values(allMap).some(function(v, i) {
-                    if(v.isCompleted) {
-                        return;
-                    } else {
-                        connectCyPost(v.id, v, 8000);
-                    }
+            if(totalFeedsCount != startCnt) {
+                var subFeeds = (startIdx == endIdx-1) ? totalFeeds.slice(startIdx, endIdx-1) : totalFeeds.slice(startIdx, endIdx);
+                subFeeds.some(function(data) {
+                    if(data[1].isCompleted) 
+                        return false;
+                    else
+                        connectCyPost(data[0], JSON.parse(JSON.stringify(data[1])));
                 });
-                tryCount++;
+                
+                startIdx = endIdx - 1;
+                endIdx = ((startIdx + 30) > totalFeedsCount) ? totalFeedsCount : startIdx + 30;
             } else {
-                finishTrigger = false;
+                for(var key in allMap) {
+                    if(allMap[key].isCompleted)
+                        continue;
+                    else {
+                        allMap[key].isStarted = false;
+                    }
+                }
+
+                totalFeeds = Object.entries(allMap);
+                
+                startIdx = 0;
+                endIdx = 30;
+                tryCount++;
+
+                console.log("CY2ME | 백업에 실패한 컨텐츠에 대하여 재시도합니다 | " + tryCount + "회 시도" );
             }
 
-            if(tryCount > 10) finishTrigger = true;
-            var hitCal = (successCnt / totalFeedCount) * 100.0;
-            console.log("Collecting Feed | " + (Date.now() - backupStartTime) + "ms | Eval " + tryCount + " startCnt = " + startCnt + " noStartCnt = " + noStartCnt + " successCnt = " + successCnt + " failCnt = " + failCnt + " | " + hitCal.toFixed(2) + "% [" + successCnt + " / " + totalFeedCount + "] " );
+            if(tryCount == 5) finishTrigger = true;
+            var hitCal = (successCnt / totalFeedsCount) * 100.0;
+            console.log("Collecting Feed | " + (Date.now() - backupStartTime) + "ms | Eval " + tryCount + " startCnt = " + startCnt + " noStartCnt = " + noStartCnt + " successCnt = " + successCnt + " failCnt = " + failCnt + " | " + hitCal.toFixed(2) + "% [" + successCnt + " / " + totalFeedsCount + "] " );
             if(finishTrigger) {
                 clearInterval(intervalCtx);
                 console.log("CY2ME | Backup is going to be finished after 15 seconds. | Thank you");
@@ -222,7 +247,6 @@ var contentObj = $(".textData", output);
             //console.log(id + " | Failed | 컨텐츠 수집 시간이 초과되었습니다.");
             post.isCompleted = false;
             allMap[id] = post;
-            //allMap[id] = post;
         });
     }
     catch(e) {
@@ -279,9 +303,10 @@ function readCyPost(cnt, t) {
 
             if(data.postList.length > 0) {
                 data.postList.some(function(value, index) {
+                //for(value in data.postList) {
                     if(t && value.serviceType != t)
-                        return false;
-                    
+                        return;
+                
                     var post = {
                         "id" : value.identity,
                         "type" : value.serviceType,
@@ -291,8 +316,6 @@ function readCyPost(cnt, t) {
                         "isStarted" : false
                     };
 
-                    allMap[value.identity] = post;
-                    
                     switch(post.type) {
                     case "2": /* include images */
                         post.image = value.summaryModel.image;
@@ -315,7 +338,8 @@ function readCyPost(cnt, t) {
                         return false;
                     }
 
-                    connectCyPost(value.identity, JSON.parse(JSON.stringify(post)));
+                    allMap[value.identity] = post;
+                    //connectCyPost(value.identity, post);
 
                     var cal = ((baseIdx + index) / ret ) * 100;
                     console.log("Analyzing Feed | " + value.identity + " | " + cal.toFixed(2) + "% [" + (baseIdx + index) + " / " + ret + "] " );
