@@ -146,12 +146,12 @@ function collectFeeds(t, comment=true) {
                 endIdx = 30;
                 tryCount++;
 
-                console.log("CY2ME | 백업에 실패한 컨텐츠에 대하여 재시도합니다 | " + tryCount + "회 시도" );
+                if(tryCount > 0 && tryCount <= 5)
+                    console.log("CY2ME | 백업에 실패한 컨텐츠에 대하여 재시도합니다 | " + tryCount + "회 시도" );
+                else if(tryCount > 5) 
+                    finishTrigger = true; 
             }
-
-            if(tryCount == 5) finishTrigger = true;
-            var hitCal = (successCnt / totalFeedsCount) * 100.0;
-            console.log("Collecting Feed | " + (Date.now() - backupStartTime) + "ms | Eval " + tryCount + " startCnt = " + startCnt + " noStartCnt = " + noStartCnt + " successCnt = " + successCnt + " failCnt = " + failCnt + " | " + hitCal.toFixed(2) + "% [" + successCnt + " / " + totalFeedsCount + "] " );
+            
             if(finishTrigger) {
                 clearInterval(intervalCtx);
                 console.log("CY2ME | Backup is going to be finished after 15 seconds. | Thank you");
@@ -165,6 +165,9 @@ function collectFeeds(t, comment=true) {
                     $(typeFeed.backup_status + " .lds-hourglass").css("display", "none");
                     $(typeFeed.backup_status + " .backup-message").css("display", "inline-block");
                 }, 15000);
+            } else {
+                var hitCal = (successCnt / totalFeedsCount) * 100.0;
+                console.log("Collecting Feed | " + (Date.now() - backupStartTime) + "ms | Eval " + tryCount + " startCnt = " + startCnt + " noStartCnt = " + noStartCnt + " successCnt = " + successCnt + " failCnt = " + failCnt + " | " + hitCal.toFixed(2) + "% [" + successCnt + " / " + totalFeedsCount + "] " );
             }
         }, 10000);
     }, 300);
