@@ -2,7 +2,7 @@ var last_id,last_dt,tag_value,startdate,enddate,forder_id,airepageno,airecase,ai
 var html = "";
 var type = 'more';
 var search = '';
-var allPosts = [];
+var allMap = {};
 var postIdx = 0;
 var activateReply = true;
 
@@ -20,6 +20,19 @@ else{
     home_idx = 0;
 }
 
+var backupStartTime = 0;
+var backupEndTime = 0;
+
+var CY2ME_CATEGORY_INFO = {
+    "M": {'type': "M", 'title': "Diary", 'backup_status': "#diary-backup-status" },
+    "O": {'type': "O", 'title': "ShareDiary", 'backup_status': "#share-diary-backup-status" },
+    "1": {'type': "1",'title': "Board",'backup_status': "#board-backup-status" },
+    "2": {'type': "2", 'title': "Photo",'backup_status': "#photo-backup-status" },
+    "B": {'type': "B", 'title': "Blog", 'backup_status': "#blog-backup-status" },
+    "P": {'type': "P", 'title': "After2015", 'backup_status': "#newcontent-backup-status" },
+    "T": {'type': "T", 'title': "Status",'backup_status': "#status-backup-status" }
+};
+
 function getBase64Image(img) {
     var canvas = document.createElement("canvas");
     canvas.width = img.width;
@@ -35,6 +48,7 @@ function getBase64Image(img) {
 function printImageList() {
     var ret = "";
     var imageCount = 0;
+    var allPosts = Object.values(allMap);
     for(var i = 0 ; i < allPosts.length; i++) {
         if(allPosts[i].type != "2")
             continue;
@@ -57,108 +71,200 @@ function saveAs(filename, file) {
     }, 0); 
 }
 
-function collectDiaries(comment=true) {
+function collectFeeds(t, comment=true) {
+    backupStartTime = Date.now();
+    var typeFeed = CY2ME_CATEGORY_INFO[t];
+
     activateReply = comment;
-    console.log("Start diary backup :)");
-    $("#diary-backup-status .backup-message").css("display", "none");
-    $("#diary-backup-status .lds-hourglass").css("display", "inline-block");
+    console.log("Start " + typeFeed.title + " backup :)");
+    $(typeFeed.backup_status + " .backup-message").css("display", "none");
+    $(typeFeed.backup_status + " .lds-hourglass").css("display", "inline-block");
+
     setTimeout(function() {
-        readAllCyPosts("M");
-        var file = new Blob([JSON.stringify(allPosts, null, 1)], {type: "text/plain;charset=utf-8"});
-        saveAs("MyCyDiary_" + Date().replace(/\ /gi, "_").split("_GMT")[0] + ".txt", file);
-        $("#diary-backup-status .lds-hourglass").css("display", "none");
-        $("#diary-backup-status .backup-message").css("display", "inline-block");
+        readAllCyPosts(t);
+
+        var totalFeeds = Object.entries(allMap);
+        var totalFeedsCount = totalFeeds.length;
+        var startIdx = 0;
+        var endIdx = 30;
+
+        var tryCount = 0;
+        
+        console.log("All " + typeFeed.title + " Feeds Count : " + totalFeedsCount);
+        console.log("Start Feeds Backup!");
+        var intervalCtx = setInterval(function() {
+            var finishTrigger = true;
+            var successCnt = 0;
+            var failCnt = 0;
+            var startCnt = 0;
+            var noStartCnt = 0;
+
+            for(var key in allMap) {
+                var v = allMap[key];
+                if(v != {}) {
+                    if(v.isStarted){
+                        startCnt++;
+                        if(v.isCompleted) {
+                            successCnt++;
+                            continue;
+                        } else {
+                            failCnt++;
+                            finishTrigger = false;
+                        }
+                    } else {
+                        finishTrigger = false;
+                        noStartCnt++;
+                    }
+                } else {
+                    finishTrigger = false;
+                }
+            }
+
+            if(totalFeedsCount != startCnt) {
+                var subFeeds = (startIdx == endIdx-1) ? totalFeeds.slice(startIdx, endIdx-1) : totalFeeds.slice(startIdx, endIdx);
+                subFeeds.some(function(data) {
+                    if(data[1].isCompleted) 
+                        return false;
+                    else
+                        connectCyPost(data[0], JSON.parse(JSON.stringify(data[1])));
+                });
+                
+                startIdx = endIdx - 1;
+                endIdx = ((startIdx + 30) > totalFeedsCount) ? totalFeedsCount : startIdx + 30;
+            } else {
+                for(var key in allMap) {
+                    if(allMap[key].isCompleted)
+                        continue;
+                    else {
+                        allMap[key].isStarted = false;
+                    }
+                }
+
+                totalFeeds = Object.entries(allMap);
+                
+                startIdx = 0;
+                endIdx = 30;
+                tryCount++;
+
+                if(tryCount > 0 && tryCount <= 5)
+                    console.log("CY2ME | 백업에 실패한 컨텐츠에 대하여 재시도합니다 | " + tryCount + "회 시도" );
+                else if(tryCount > 5) 
+                    finishTrigger = true; 
+            }
+            
+            if(finishTrigger) {
+                clearInterval(intervalCtx);
+                console.log("CY2ME | Backup is going to be finished after 15 seconds. | Thank you");
+                setTimeout(function() {
+                    var backupTime = Date.now() - backupStartTime;
+                    console.log("총 " + (backupTime / 1000.0) + "초 동안 백업이 진행되었습니다.");
+                    console.log("Backup Finished.");
+                    var allPosts = Object.values(allMap);
+                    var file = new Blob([JSON.stringify(allPosts, null, 1)], {type: "text/plain;charset=utf-8"});
+                    saveAs("MyCy" + typeFeed.title +"_" + Date().replace(/\ /gi, "_").split("_GMT")[0] + ".txt", file);
+                    $(typeFeed.backup_status + " .lds-hourglass").css("display", "none");
+                    $(typeFeed.backup_status + " .backup-message").css("display", "inline-block");
+                }, 15000);
+            } else {
+                var hitCal = (successCnt / totalFeedsCount) * 100.0;
+                console.log("Collecting Feed | " + (Date.now() - backupStartTime) + "ms | Eval " + tryCount + " startCnt = " + startCnt + " noStartCnt = " + noStartCnt + " successCnt = " + successCnt + " failCnt = " + failCnt + " | " + hitCal.toFixed(2) + "% [" + successCnt + " / " + totalFeedsCount + "] " );
+            }
+        }, 10000);
     }, 300);
 }
 
-function collectShareDiaries(comment=true) {
-    activateReply = comment;
-    console.log("Start diary backup :)");
-    $("#share-diary-backup-status .backup-message").css("display", "none");
-    $("#share-diary-backup-status .lds-hourglass").css("display", "inline-block");
-    setTimeout(function() {
-        readAllCyPosts("O");
-        var file = new Blob([JSON.stringify(allPosts, null, 1)], {type: "text/plain;charset=utf-8"});
-        saveAs("MyCyShareDiary_" + Date().replace(/\ /gi, "_").split("_GMT")[0] + ".txt", file);
-        $("#share-diary-backup-status .lds-hourglass").css("display", "none");
-        $("#share-diary-backup-status .backup-message").css("display", "inline-block");
-    }, 300);
-}
+function collectShareDiaries(comment=true) { collectFeeds("O", comment); }
+function collectBoards(comment=true) { collectFeeds("1", comment); }
+function collectBlogs(comment=true) { collectFeeds("B", comment); }
+function collectDiaries(comment=true) { collectFeeds("M", comment); }
+function collectPhotos(comment=true) { collectFeeds("2", comment); }
+function collect2015(comment=true) { collectFeeds("P", comment); }
+function collectStatus(comment=true) { collectFeeds("T", comment); }
 
-function collectBoards(comment=true) {
-    activateReply = comment;
-    console.log("Start board backup :)");
-    $("#board-backup-status .backup-message").css("display", "none");
-    $("#board-backup-status .lds-hourglass").css("display", "inline-block");
-    setTimeout(function() {
-        readAllCyPosts("1");
-        var file = new Blob([JSON.stringify(allPosts, null, 1)], {type: "text/plain;charset=utf-8"});
-        saveAs("MyCyBoards_" + Date().replace(/\ /gi, "_").split("_GMT")[0] + ".txt", file);
-        $("#board-backup-status .lds-hourglass").css("display", "none");
-        $("#board-backup-status .backup-message").css("display", "inline-block");
-    }, 300);
-}
-
-function collectBlogs(comment=true) {
-    activateReply = comment;
-    console.log("Start blog backup :)");
-    $("#blog-backup-status .backup-message").css("display", "none");
-    $("#blog-backup-status .lds-hourglass").css("display", "inline-block");
-    setTimeout(function() {
-        readAllCyPosts("B");
-        var file = new Blob([JSON.stringify(allPosts, null, 1)], {type: "text/plain;charset=utf-8"});
-        saveAs("MyCyBlogs_" + Date().replace(/\ /gi, "_").split("_GMT")[0] + ".txt", file);
-        $("#blog-backup-status .lds-hourglass").css("display", "none");
-        $("#blog-backup-status .backup-message").css("display", "inline-block");
-    }, 300);
-}
-
-
-function collect2015(comment=true) {
-    activateReply = comment;
-    console.log("Start new content backup :)");
-    $("#newcontent-backup-status .backup-message").css("display", "none");
-    $("#newcontent-backup-status .lds-hourglass").css("display", "inline-block");
-    setTimeout(function() {
-        readAllCyPosts("P");
-        var file = new Blob([JSON.stringify(allPosts, null, 1)], {type: "text/plain;charset=utf-8"});
-        saveAs("MyCyNewContents_" + Date().replace(/\ /gi, "_").split("_GMT")[0] + ".txt", file);
-        $("#newcontent-backup-status .lds-hourglass").css("display", "none");
-        $("#newcontent-backup-status .backup-message").css("display", "inline-block");
-    }, 300);
-}
-
-function collectStatus(comment=true) {
-    activateReply = comment;
-    console.log("Start status backup :)");
-    $("#status-backup-status .backup-message").css("display", "none");
-    $("#status-backup-status .lds-hourglass").css("display", "inline-block");
-    setTimeout(function() {
-        readAllCyPosts("T");
-        var file = new Blob([JSON.stringify(allPosts, null, 1)], {type: "text/plain;charset=utf-8"});
-        saveAs("MyCyStatus_" + Date().replace(/\ /gi, "_").split("_GMT")[0] + ".txt", file);
-        $("#status-backup-status .lds-hourglass").css("display", "none");
-        $("#status-backup-status .backup-message").css("display", "inline-block");
-    }, 300);
-}
-
-function collectPhotos(comment=true) {
-    activateReply = comment;
-    console.log("Start photo backup :)");
-    $("#photo-backup-status .backup-message").css("display", "none");
-    $("#photo-backup-status .lds-hourglass").css("display", "inline-block");
-    setTimeout(function() {
-        readAllCyPosts("2");
-        var file = new Blob([JSON.stringify(allPosts, null, 1)], {type: "text/plain;charset=utf-8"});
-        saveAs("MyCyPhotos_" + Date().replace(/\ /gi, "_").split("_GMT")[0] + ".txt", file);
-        $("#photo-backup-status .lds-hourglass").css("display", "none");
-        $("#photo-backup-status .backup-message").css("display", "inline-block");
-    }, 300);
+var connectCyPostCnt = 0;
+function connectCyPost(id, post, time=0) {
+    
+    try {
+        var ajaxOption = {
+            url: "/home/" + homeTid + "/post/"+ id + "/layer",
+            cache:false,
+            async:true,
+            dataType:'html',
+            data:{},
+            beforeSend: function() {
+                post.isStarted = true;
+            } 
+        };
+        
+        if(time != 0)
+            ajaxOption["timeout"] = time;
+        
+        $.ajax(ajaxOption).done(function(viewResult) {
+            var output = $("<output>").append($.parseHTML(viewResult));
+            if(typeof $(".textData", output)[0] === 'undefined'){
+                post.isCompleted = false;
+                allMap[id] = post;
+                return false;
+            }
+            
+            if(post.type != "M" && post.type != "O")
+                post.title = $("#cyco-post-title", output)[0].innerText.trim();
+            var content = "";
+            var imageObj = $("section .cyco-imagelet figure img", output);
+for(var i = 0; i < imageObj.length; i++)
+content += "<img src ='http://nthumb.cyworld.com/thumb?v=0&width=810&url=" + decodeURIComponent(imageObj[i].getAttribute("srctext")) + "'/>";
+var contentObj = $(".textData", output);
+            for(var i = 0; i < contentObj.length; i++)
+                content += contentObj[i].innerHTML.trim();
+            post.content = content;
+            post.date = $(".view1", output)[0].innerText.trim().split(" ")[0].split('\t').pop();
+            post.time = $(".view1", output)[0].innerText.trim().split(" ")[1];
+            post.isCompleted = true;
+            if(activateReply) {
+                var commentCount = post.commentCount;
+                if(commentCount != 0){
+                    $.ajax({
+                        url: "/home/" + homeTid + "/post/" + id + "/comment",
+                        dataType:'json',
+                        async:true,
+                        data: {},
+                    }).done(function(comments) {
+                        post.comments = [];
+                        for(comment_idx in comments.commentList) {
+                            var temp = comments.commentList[comment_idx].contentModel[0];
+                            temp.name = comments.commentList[comment_idx].writer.name;
+                            if(typeof temp.name === 'undefined'){
+                                temp.name = comments.commentList[comment_idx].writer.nickname;
+                            }
+                            post.comments.push(temp);
+                        }
+                        allMap[id] = post;
+                    }).fail(function() {
+                        console.log(id + " | Failed | 댓글 수집에 실패하였습니다. 댓글을 제외한 컨텐츠만 저장됩니다.");
+                        allMap[id] = post;
+                    });
+                } else {
+                    allMap[id] = post;
+                }
+            } else {
+                allMap[id] = post;
+            }
+        }).fail(function(request, status ,error){
+            //console.log(id + " | Failed | 컨텐츠 수집 시간이 초과되었습니다.");
+            post.isCompleted = false;
+            allMap[id] = post;
+        });
+    }
+    catch(e) {
+        console.error(e);
+        console.log("try catch error : " + e);
+        //allMap[id] = post;
+    }
 }
 
 function readAllCyPosts(t) {
     // initialize global variables
-    allPosts = [];
+    allMap = {};
     postIdx = 0;
     last_dt = null;
     var totalCount = readCyPost(30, t);
@@ -171,7 +277,7 @@ function readAllCyPosts(t) {
         readCyPost(totalCount - postIdx, t);
         postIdx += 30;
     } while (totalCount - postIdx > 0);
-    console.log("Finish");
+    console.log("Analyzation Finishd.");
 }
 
 function readCyPost(cnt, t) {
@@ -203,15 +309,19 @@ function readCyPost(cnt, t) {
 
             if(data.postList.length > 0) {
                 data.postList.some(function(value, index) {
+                //for(value in data.postList) {
                     if(t && value.serviceType != t)
-                        return false;
-                    
+                        return;
+                
                     var post = {
+                        "id" : value.identity,
                         "type" : value.serviceType,
                         "writer" : value.writer,
                         "viewCount" : value.viewCount,
+                        "commentCount" : value.commentCount,
+                        "isStarted" : false
                     };
-                    
+
                     switch(post.type) {
                     case "2": /* include images */
                         post.image = value.summaryModel.image;
@@ -229,72 +339,15 @@ function readCyPost(cnt, t) {
                     case "B": /* Blog */
                         break;
                     case "7": 
-                        if(t) allPosts[baseIdx + index] = post;
-                        else allPosts.push(post);
+                        //if(t) allPosts[baseIdx + index] = post;
+                        //else allPosts.push(post);
                         return false;
                     }
-                    try {
-                        $.ajax({
-                            url: "/home/" + homeTid + "/post/"+ value.identity + "/layer",
-                            cache:false,
-                            async:false,
-                            dataType:'html',
-                            data:{},
-                            success:function(viewResult, status, xhr) {
-                                var output = $("<output>").append($.parseHTML(viewResult));
-                                if(typeof $(".textData", output)[0] === 'undefined'){
-                                    return false;
-                                }
-                                
-                                if(post.type != "M" && post.type != "O")
-                                    post.title = $("#cyco-post-title", output)[0].innerText.trim();
-                                var content = "";
-                                var imageObj = $("section .cyco-imagelet figure img", output);
-				for(var i = 0; i < imageObj.length; i++)
-				    content += "<img src ='http://nthumb.cyworld.com/thumb?v=0&width=810&url=" + decodeURIComponent(imageObj[i].getAttribute("srctext")) + "'/>";
-				var contentObj = $(".textData", output);
-                                for(var i = 0; i < contentObj.length; i++)
-                                    content += contentObj[i].innerHTML.trim();
-                                post.content = content;
-                                post.date = $(".view1", output)[0].innerText.trim().split(" ")[0].split('\t').pop();
-                                post.time = $(".view1", output)[0].innerText.trim().split(" ")[1];
 
-                                if(activateReply) {
-                                    var commentCount = value.commentCount;
-                                    if(commentCount != 0){
-                                        $.ajax({
-                                            url: "/home/" + homeTid + "/post/" + value.identity + "/comment",
-                                            dataType:'json',
-                                            async:false,
-                                            data: {},
-                                            success: function(comments, status, xhr) {
-                                                post.comments = [];
-                                                for(comment_idx in comments.commentList) {
-                                                    var temp = comments.commentList[comment_idx].contentModel[0];
-                                                    temp.name = comments.commentList[comment_idx].writer.name;
-                                                    if(typeof temp.name === 'undefined'){
-                                                        temp.name = comments.commentList[comment_idx].writer.nickname;
-                                                    }
-                                                    post.comments.push(temp);
-                                                }
-                                                allPosts.push(post); 
-                                            }
-                                        });
-                                    } else {
-                                        allPosts.push(post); 
-                                    }
-                                } else {
-                                    allPosts.push(post); 
-                                }
-                            }
-                        });
-                    }
-                    catch(e) {
-                        console.error(e);
-                    }
+                    allMap[value.identity] = post;
+
                     var cal = ((baseIdx + index) / ret ) * 100;
-                    //downloadStatus.text(cal.toFixed(2) + "% [" + (baseIdx + index) + " / " + ret + "] " );
-                    console.log("Collecting | " + value.identity + " | " + cal.toFixed(2) + "% [" + (baseIdx + index) + " / " + ret + "] " );
+                    console.log("Analyzing Feed | " + value.identity + " | " + cal.toFixed(2) + "% [" + (baseIdx + index) + " / " + ret + "] " );
                 });
             }else {
                 ret = 0;
@@ -351,8 +404,8 @@ function initializeCy2me() {
     $(".profile dfn:first").append($("<em>"));
     $(".profile dfn:first").append(statusBtn);
     $(".profile dfn:first").append(statusStatus);
+
+    console.log("CY2ME : Cyworld 백업 준비 완료 | 웹페이지에 보시면 백업 메뉴가 활성화되어 있습니다.");
 }
 
 initializeCy2me();
-console.log("CY2ME : Cyworld 백업 준비 완료 :)");
-
