@@ -345,7 +345,6 @@ function readCyPost(cnt, t) {
                     }
 
                     allMap[value.identity] = post;
-                    //connectCyPost(value.identity, post);
 
                     var cal = ((baseIdx + index) / ret ) * 100;
                     console.log("Analyzing Feed | " + value.identity + " | " + cal.toFixed(2) + "% [" + (baseIdx + index) + " / " + ret + "] " );
